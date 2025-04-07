@@ -7,7 +7,8 @@ public enum PlayerStateType
     Moving,
     Attacking,
     Dodging,
-    Healing
+    Healing,
+    InAir
 }
 
 [Serializable]
@@ -17,18 +18,18 @@ public class PlayerStateInfo
 
     public bool CanMove => currentState != PlayerStateType.Attacking && currentState != PlayerStateType.Healing;
 
-    public bool CanAttack => currentState != PlayerStateType.Healing && currentState != PlayerStateType.Dodging;
+    public bool CanAttack => currentState == PlayerStateType.Idle || currentState == PlayerStateType.Moving || currentState == PlayerStateType.Attacking;
 
-    public bool CanHeal => currentState == PlayerStateType.Idle || currentState == PlayerStateType.Moving;
+    public bool CanHeal => currentState == PlayerStateType.Idle;
 
-    public bool CanDodge => currentState != PlayerStateType.Healing;
+    public bool CanDodge => currentState == PlayerStateType.Idle || currentState == PlayerStateType.Moving;
 }
 
 public class PlayerStateManager : MonoBehaviour
 {
     public static PlayerStateManager Instance { get; private set; }
 
-    public PlayerStateInfo stateInfo = new PlayerStateInfo();
+    [SerializeField] private PlayerStateInfo stateInfo = new PlayerStateInfo();
 
     public event Action<PlayerStateType> OnStateChanged;
 
@@ -52,4 +53,6 @@ public class PlayerStateManager : MonoBehaviour
             OnStateChanged?.Invoke(newState);
         }
     }
+
+    public PlayerStateInfo GetCurrentState() { return stateInfo; }
 }

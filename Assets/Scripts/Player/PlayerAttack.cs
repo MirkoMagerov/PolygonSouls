@@ -3,7 +3,6 @@ using UnityEngine.InputSystem;
 
 public class PlayerAttack : MonoBehaviour
 {
-    private int hashAttackCount = Animator.StringToHash("AttackCount");
     public bool isAttacking = false;
 
     private Animator animator;
@@ -22,7 +21,7 @@ public class PlayerAttack : MonoBehaviour
 
     private void Attack(InputAction.CallbackContext context)
     {
-        if (!PlayerStateManager.Instance.stateInfo.CanAttack) return;
+        if (!PlayerStateManager.Instance.GetCurrentState().CanAttack) return;
 
         PlayerStateManager.Instance.SetState(PlayerStateType.Attacking);
         isAttacking = true;

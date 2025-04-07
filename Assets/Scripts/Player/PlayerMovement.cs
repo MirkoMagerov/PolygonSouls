@@ -11,14 +11,14 @@ public class PlayerMovement : MonoBehaviour
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
-        InputActionsManager.Instance.GetPlayerControls().Movement.Direction.performed += OnMoveReadValues;
-        InputActionsManager.Instance.GetPlayerControls().Movement.Direction.canceled += OnMoveReadValues;
+        InputActionsManager.Instance.GetPlayerControls().Player.Move.performed += OnMoveReadValues;
+        InputActionsManager.Instance.GetPlayerControls().Player.Move.canceled += OnMoveReadValues;
     }
 
     private void OnDisable()
     {
-        InputActionsManager.Instance.GetPlayerControls().Movement.Direction.performed -= OnMoveReadValues;
-        InputActionsManager.Instance.GetPlayerControls().Movement.Direction.canceled -= OnMoveReadValues;
+        InputActionsManager.Instance.GetPlayerControls().Player.Move.performed -= OnMoveReadValues;
+        InputActionsManager.Instance.GetPlayerControls().Player.Move.canceled -= OnMoveReadValues;
     }
 
     private void FixedUpdate()
@@ -33,7 +33,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void Move()
     {
-        if (!PlayerStateManager.Instance.stateInfo.CanMove)
+        if (!PlayerStateManager.Instance.GetCurrentState().CanMove)
         {
             Debug.Log("Cant move");
             rb.velocity = new Vector3(0, rb.velocity.y, 0);
@@ -48,7 +48,7 @@ public class PlayerMovement : MonoBehaviour
             PlayerStateManager.Instance.SetState(PlayerStateType.Moving);
         }
 
-        else if (PlayerStateManager.Instance.stateInfo.currentState == PlayerStateType.Moving)
+        else if (PlayerStateManager.Instance.GetCurrentState().currentState == PlayerStateType.Moving)
         {
             PlayerStateManager.Instance.SetState(PlayerStateType.Idle);
         }
