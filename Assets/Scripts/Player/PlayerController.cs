@@ -17,6 +17,7 @@ public class PlayerController : MonoBehaviour
     [Header("Dodge Roll")]
     public float dodgeTimer;
     [SerializeField] AnimationCurve dodgeCurve;
+    public float dodgeCooldown = 3.5f;
 
     [Header("Player Grounded")]
     public bool Grounded = true;
@@ -43,9 +44,7 @@ public class PlayerController : MonoBehaviour
 
     // Dodge roll fields
     private bool isDodging = false;
-    private float dodgeTimeRemaining = 0f;
-    private float dodgeCooldownRemaining = 0f;
-    private Vector3 dodgeDirection;
+    public float dodgeCooldownRemaining = 0;
     private bool isInvincible = false;
 
     // Animation IDs
@@ -88,13 +87,18 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         hasAnimator = TryGetComponent(out animator);
+        if (dodgeCooldownRemaining > 0f)
+        {
+            dodgeCooldownRemaining -= Time.deltaTime;
+        }
 
         GroundedCheck();
 
         if (!isDodging)
         {
-            if (input.dodge && Grounded)
+            if (input.dodge && Grounded && dodgeCooldownRemaining <= 0f)
             {
+                dodgeCooldownRemaining = dodgeCooldown;
                 StartCoroutine(DodgeRoll());
                 input.dodge = false;
             }
@@ -113,6 +117,7 @@ public class PlayerController : MonoBehaviour
 
     private IEnumerator DodgeRoll()
     {
+        isInvincible = true;
         PlayerStateManager.Instance.SetState(PlayerStateType.Dodging);
         animator.SetTrigger(animIDDodge);
         isDodging = true;
@@ -126,6 +131,7 @@ public class PlayerController : MonoBehaviour
             yield return null;
         }
         isDodging = false;
+        isInvincible = false;
         PlayerStateManager.Instance.SetState(PlayerStateType.Idle);
     }
 
