@@ -115,6 +115,16 @@ public class PlayerController : MonoBehaviour
         CameraRotation();
     }
 
+    private void AssignAnimationIDs()
+    {
+        animIDSpeed = Animator.StringToHash("Speed");
+        animIDGrounded = Animator.StringToHash("Grounded");
+        animIDJump = Animator.StringToHash("Jump");
+        animIDFreeFall = Animator.StringToHash("FreeFall");
+        animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
+        animIDDodge = Animator.StringToHash("Roll");
+    }
+
     private IEnumerator DodgeRoll()
     {
         isInvincible = true;
@@ -133,16 +143,6 @@ public class PlayerController : MonoBehaviour
         isDodging = false;
         isInvincible = false;
         PlayerStateManager.Instance.SetState(PlayerStateType.Idle);
-    }
-
-    private void AssignAnimationIDs()
-    {
-        animIDSpeed = Animator.StringToHash("Speed");
-        animIDGrounded = Animator.StringToHash("Grounded");
-        animIDJump = Animator.StringToHash("Jump");
-        animIDFreeFall = Animator.StringToHash("FreeFall");
-        animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
-        animIDDodge = Animator.StringToHash("Roll");
     }
 
     public bool IsInvincible()

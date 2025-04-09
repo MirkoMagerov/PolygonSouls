@@ -11,6 +11,7 @@ namespace StarterAssets
 		public bool jump;
 		public bool sprint;
 		public bool dodge;
+		public bool lockOn;
 
 		[Header("Movement Settings")]
 		public bool analogMovement;
@@ -47,7 +48,12 @@ namespace StarterAssets
 			DodgeInput(value.isPressed);
 		}
 
-		public void MoveInput(Vector2 newMoveDirection)
+		public void OnLockOn(InputValue value)
+        {
+            LockOnInput(value.isPressed);
+        }
+
+        public void MoveInput(Vector2 newMoveDirection)
 		{
 			move = newMoveDirection;
 		}
@@ -70,6 +76,11 @@ namespace StarterAssets
 		private void DodgeInput(bool newDodgeState)
 		{
 			dodge = newDodgeState;
+		}
+
+		private void LockOnInput(bool newLockOnState)
+		{
+			lockOn = newLockOnState;
 		}
 
 		private void OnApplicationFocus(bool hasFocus)
