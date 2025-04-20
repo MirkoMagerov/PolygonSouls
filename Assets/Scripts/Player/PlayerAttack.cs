@@ -1,25 +1,33 @@
+using StarterAssets;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class PlayerAttack : MonoBehaviour
 {
     public bool isAttacking = false;
 
+    private bool attackWindow;
+    private bool hitRegisteredThisAttack;
+
     private Animator animator;
+    private StarterAssetsInputs inputActions;
 
     void Start()
     {
-        animator = GetComponentInChildren<Animator>();
-        InputActionsManager.Instance.GetPlayerControls().Attack.PrimaryAttack.performed += Attack;
+        animator = GetComponent<Animator>();
+        inputActions = GetComponent<StarterAssetsInputs>();
         AutomatizeAnimationEvents();
     }
 
-    private void OnDisable()
+    void Update()
     {
-        InputActionsManager.Instance.GetPlayerControls().Attack.PrimaryAttack.performed -= Attack;
+        if (inputActions.primaryAttack)
+        {
+            Attack();
+            inputActions.primaryAttack = false;
+        }
     }
 
-    private void Attack(InputAction.CallbackContext context)
+    private void Attack()
     {
         if (!PlayerStateManager.Instance.GetCurrentState().CanAttack) return;
 
@@ -50,4 +58,15 @@ public class PlayerAttack : MonoBehaviour
         PlayerStateManager.Instance.SetState(PlayerStateType.Idle);
         isAttacking = false;
     }
+
+    public void SetAttackWindowActive(int isActive)
+    {
+        attackWindow = isActive == 1;
+        if (isActive == 1)
+        {
+            hitRegisteredThisAttack = false;
+        }
+    }
+
+    public bool GetAttackWindow() => attackWindow;
 }
