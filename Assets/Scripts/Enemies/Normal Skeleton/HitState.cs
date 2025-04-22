@@ -9,15 +9,13 @@ public class HitState : EnemyBaseState
 
     public override void EnterState()
     {
-        // Detener movimiento
+        stateMachine.SetAttackWindowActive(0);
         stateMachine.Agent.isStopped = true;
         stateMachine.Agent.velocity = Vector3.zero;
 
-        // Activar animación
         stateMachine.Animator.SetBool("IsRunning", false);
         stateMachine.Animator.SetTrigger("Hit");
 
-        // Reiniciar timer
         hitTimer = 0f;
     }
 

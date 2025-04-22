@@ -32,10 +32,12 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        movement.GroundedCheck();
+        movement.HandleJumpAndGravity();
+        movement.HandleMovement();
+
         if (!dodge.IsDodging)
         {
-            movement.GroundedCheck();
-
             if (input.dodge && dodge.CanDodge() && PlayerStateManager.Instance.GetCurrentState().CanDodge)
             {
                 if (input.move.x != 0 || input.move.y != 0)
@@ -47,12 +49,6 @@ public class PlayerController : MonoBehaviour
                     dodge.StartBackStep();
                 }
             }
-            else if (PlayerStateManager.Instance.GetCurrentState().currentState != PlayerStateType.Attacking)
-            {
-                movement.HandleJumpAndGravity();
-                movement.HandleMovement();
-            }
-
             input.dodge = false;
         }
     }

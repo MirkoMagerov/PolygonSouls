@@ -18,18 +18,19 @@ public class PlayerLockOn : MonoBehaviour
     [SerializeField] private float maxNoticeAngle = 60f;
     [SerializeField] private float crosshairScale = 0.1f;
 
-    //[SerializeField] CameraFollow camFollow;
+    [Header("Camera Constraints")]
+    [SerializeField] private float minVerticalAngle = -20f;
+    [SerializeField] private float maxVerticalAngle = 50f;
+
     [SerializeField] GameObject lockOnCanvas;
 
     Transform cam;
     float currentYOffset;
     Vector3 pos;
-    private StarterAssetsInputs input;
 
     private void Start()
     {
         cam = Camera.main.transform;
-        input = GetComponent<StarterAssetsInputs>();
         anim = GetComponent<Animator>();
     }
 
@@ -79,15 +80,32 @@ public class PlayerLockOn : MonoBehaviour
         anim.SetLayerWeight(1, 0f);
         anim.SetLayerWeight(2, 1f);
         cinemachineAnimator.Play("LockOn Camera");
+
+        currentTarget.TryGetComponent(out EnemyHealth enemyHealth);
+        enemyHealth.OnEnemyDeath += NotifyTargetDeath;
     }
 
     private void ResetTarget()
     {
+        if (currentTarget != null)
+        {
+            currentTarget.TryGetComponent(out EnemyHealth enemyHealth);
+            enemyHealth.OnEnemyDeath -= NotifyTargetDeath;
+        }
+
         lockOnCanvas.SetActive(false);
         anim.SetLayerWeight(2, 0f);
         anim.SetLayerWeight(1, 1f);
         cinemachineAnimator.Play("FreeLook Camera");
         currentTarget = null;
+    }
+
+    public void NotifyTargetDeath(Transform deadEnemy)
+    {
+        if (currentTarget == deadEnemy)
+        {
+            ResetTarget();
+        }
     }
 
     private Transform ScanNearBy()
@@ -134,7 +152,8 @@ public class PlayerLockOn : MonoBehaviour
     bool TargetOnRange()
     {
         float dis = (transform.position - pos).magnitude;
-        if (dis / 2 > noticeZone) return false; else return true;
+        if (dis / 2 > noticeZone) return false;
+        else return true;
     }
 
     private void LookAtTarget()
@@ -144,11 +163,17 @@ public class PlayerLockOn : MonoBehaviour
             ResetTarget();
             return;
         }
-        pos = currentTarget.position + new Vector3(0, currentYOffset, 0);
-        lockOnCanvas.transform.position = pos;
-        lockOnCanvas.transform.localScale = (cam.position - pos).magnitude * crosshairScale * Vector3.one;
 
-        enemyTargetLocator.position = pos;
+        CharacterController enemyController = currentTarget.GetComponent<CharacterController>();
+        float chestHeight = enemyController.height * 0.65f;
+
+        Vector3 targetPosition = currentTarget.position + new Vector3(0, chestHeight, 0);
+
+        lockOnCanvas.transform.position = targetPosition;
+        lockOnCanvas.transform.localScale = (cam.position - targetPosition).magnitude * crosshairScale * Vector3.one;
+
+        enemyTargetLocator.position = targetPosition;
+
         Vector3 dir = currentTarget.position - transform.position;
         dir.y = 0;
         Quaternion rot = Quaternion.LookRotation(dir);

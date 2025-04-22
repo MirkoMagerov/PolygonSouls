@@ -24,7 +24,7 @@ public class PlayerStateInfo
     public bool CanAttack => currentState == PlayerStateType.Idle || currentState == PlayerStateType.Moving
     || currentState == PlayerStateType.Attacking;
 
-    public bool CanHeal => currentState == PlayerStateType.Idle;
+    public bool CanHeal => currentState == PlayerStateType.Idle || currentState == PlayerStateType.Moving;
 
     public bool CanDodge => currentState == PlayerStateType.Idle || currentState == PlayerStateType.Moving;
 }

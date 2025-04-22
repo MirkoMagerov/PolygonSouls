@@ -1,18 +1,60 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class GameManager : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    public static GameManager Instance { get; private set; }
+    public PlayerInput inputSystem;
+
+    void Awake()
     {
-        
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+
+        inputSystem = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerInput>();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            DisableInputSystem();
+        }
+        if (Input.GetKeyDown(KeyCode.Tab))
+        {
+            EnableInputSystem();
+        }
+    }
+
+    void OnEnable()
+    {
+        PlayerHealth.OnPlayerDied += HandlePlayerDeath;
+    }
+
+    void OnDisable()
+    {
+        PlayerHealth.OnPlayerDied -= HandlePlayerDeath;
+    }
+
+    public void DisableInputSystem()
+    {
+        inputSystem.DeactivateInput();
+    }
+
+    public void EnableInputSystem()
+    {
+        inputSystem.ActivateInput();
+    }
+
+    private void HandlePlayerDeath()
+    {
+        DisableInputSystem();
     }
 }

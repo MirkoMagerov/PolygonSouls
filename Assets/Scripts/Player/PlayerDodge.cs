@@ -7,7 +7,7 @@ public class PlayerDodge : MonoBehaviour
     [Header("Dodge Roll")]
     public float dodgeTimer = 0.5f;
     [SerializeField] AnimationCurve dodgeCurve;
-    public float dodgeCooldown = 1.5f;
+    public float dodgeCooldown = 1.65f;
     public float dodgeCost = 15f;
 
     [Header("Back Step")]
@@ -109,7 +109,7 @@ public class PlayerDodge : MonoBehaviour
         float timer = 0;
         while (timer < dodgeTimer)
         {
-            float dodgeSpeed = dodgeCurve.Evaluate(timer) * 13f;
+            float dodgeSpeed = dodgeCurve.Evaluate(timer) * 2f;
             Vector3 dir = transform.forward * dodgeSpeed;
             controller.Move(dir * Time.deltaTime + new Vector3(0.0f, movement.verticalVelocity, 0.0f) * Time.deltaTime);
             timer += Time.deltaTime;

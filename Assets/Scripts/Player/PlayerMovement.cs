@@ -69,13 +69,10 @@ public class PlayerMovement : MonoBehaviour
 
     public void GroundedCheck()
     {
-        Vector3 spherePosition = new Vector3(transform.position.x, transform.position.y - GroundedOffset, transform.position.z);
+        Vector3 spherePosition = new(transform.position.x, transform.position.y - GroundedOffset, transform.position.z);
         Grounded = Physics.CheckSphere(spherePosition, GroundedRadius, GroundLayers, QueryTriggerInteraction.Ignore);
 
-        if (animator != null)
-        {
-            animator.SetBool(animIDGrounded, Grounded);
-        }
+        animator.SetBool(animIDGrounded, Grounded);
     }
 
     public void HandleMovement()
@@ -137,7 +134,23 @@ public class PlayerMovement : MonoBehaviour
 
     public void MoveInLockOnMode()
     {
-        controller.Move(new Vector3(0.0f, verticalVelocity, 0.0f) * Time.deltaTime);
+        Vector3 verticalMovement = new Vector3(0.0f, verticalVelocity, 0.0f) * Time.deltaTime;
+
+        if (input.move.x != 0 && input.move.y != 0)
+        {
+            Vector3 moveDirection = new Vector3(input.move.x, 0, input.move.y).normalized;
+
+            moveDirection = Quaternion.Euler(0, mainCamera.transform.eulerAngles.y, 0) * moveDirection;
+
+            float targetSpeed = input.sprint ? SprintSpeed : MoveSpeed;
+
+            float diagonalCompensation = 0.4f;
+            controller.Move(diagonalCompensation * targetSpeed * Time.deltaTime * moveDirection + verticalMovement);
+        }
+        else
+        {
+            controller.Move(verticalMovement);
+        }
 
         animator.SetFloat("Horizontal", input.move.x);
         animator.SetFloat("Vertical", input.move.y);
@@ -151,25 +164,20 @@ public class PlayerMovement : MonoBehaviour
             {
                 PlayerStateManager.Instance.SetState(PlayerStateType.Idle);
             }
-            if (animator != null)
-            {
-                animator.SetBool(animIDJump, false);
-                animator.SetBool(animIDFreeFall, false);
-            }
+
+            animator.SetBool(animIDJump, false);
+            animator.SetBool(animIDFreeFall, false);
 
             if (verticalVelocity < 0.0f)
             {
-                verticalVelocity = -2f;
+                verticalVelocity = 0f;
             }
 
             if (input.jump && jumpTimeoutDelta <= 0.0f)
             {
                 verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
 
-                if (animator != null)
-                {
-                    animator.SetBool(animIDJump, true);
-                }
+                animator.SetBool(animIDJump, true);
             }
 
             if (jumpTimeoutDelta >= 0.0f)
@@ -182,10 +190,7 @@ public class PlayerMovement : MonoBehaviour
             PlayerStateManager.Instance.SetState(PlayerStateType.InAir);
             jumpTimeoutDelta = JumpTimeout;
 
-            if (animator != null)
-            {
-                animator.SetBool(animIDFreeFall, true);
-            }
+            animator.SetBool(animIDFreeFall, true);
 
             input.jump = false;
         }

@@ -1,9 +1,13 @@
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class EnemyHealth : MonoBehaviour
 {
+    public delegate void EnemyDeathHandler(Transform enemy);
+    public event EnemyDeathHandler OnEnemyDeath;
+
     [SerializeField] private Canvas healthBarCanvas;
     [SerializeField] private Slider healthBar;
     [SerializeField] private Slider damageBar;
@@ -24,6 +28,8 @@ public class EnemyHealth : MonoBehaviour
         damageBar.maxValue = maxHealth;
         healthBar.value = maxHealth;
         damageBar.value = maxHealth;
+
+        if (maxHealth == currentHealth) healthBar.gameObject.SetActive(false);
     }
 
     void Update()
@@ -33,6 +39,8 @@ public class EnemyHealth : MonoBehaviour
 
     public void TakeDamage(int damage)
     {
+        if (!healthBar.gameObject.activeInHierarchy) healthBar.gameObject.SetActive(true);
+
         int previousHealth = currentHealth;
         currentHealth = Mathf.Max(currentHealth - damage, 0);
 
@@ -78,6 +86,8 @@ public class EnemyHealth : MonoBehaviour
 
     private void Die()
     {
+        OnEnemyDeath?.Invoke(transform);
+
         Destroy(gameObject);
     }
 }
