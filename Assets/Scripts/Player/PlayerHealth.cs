@@ -12,6 +12,7 @@ public class PlayerHealth : MonoBehaviour
     [SerializeField] private int initialPotions = 5;
     [SerializeField] private int maxHealth = 100;
     [SerializeField] TextMeshProUGUI potionAmountText;
+    [SerializeField] GameObject healingEffect;
     private int currentHealth;
     private int potionQuantity;
     private bool isHealingApplied = false;
@@ -20,10 +21,7 @@ public class PlayerHealth : MonoBehaviour
     private Animator animator;
     private StarterAssetsInputs input;
 
-    [SerializeField] private float healingThreshold = 0.6f;
     private bool isHealing = false;
-    private float healingProgress = 0f;
-    private float healingDuration = 0f;
 
     void Start()
     {
@@ -34,16 +32,6 @@ public class PlayerHealth : MonoBehaviour
         currentHealth = maxHealth;
         potionQuantity = initialPotions;
 
-        AnimationClip[] clips = animator.runtimeAnimatorController.animationClips;
-        foreach (AnimationClip clip in clips)
-        {
-            if (clip.name.Contains("Drink potion"))
-            {
-                healingDuration = clip.length;
-                break;
-            }
-        }
-
         UpdateUI();
     }
 
@@ -53,17 +41,6 @@ public class PlayerHealth : MonoBehaviour
         {
             input.isHealing = false;
             StartHealing();
-        }
-
-        if (isHealing)
-        {
-            healingProgress += Time.deltaTime / healingDuration;
-
-            if (healingProgress >= healingThreshold && !isHealingApplied)
-            {
-                Heal(potionHealAmount);
-                isHealingApplied = true;
-            }
         }
     }
 
@@ -93,7 +70,6 @@ public class PlayerHealth : MonoBehaviour
     private void StartHealing()
     {
         isHealing = true;
-        healingProgress = 0f;
         isHealingApplied = false;
         PlayerStateManager.Instance.SetState(PlayerStateType.Healing);
         equipmentReference.GetShield().SetActive(false);
@@ -107,15 +83,25 @@ public class PlayerHealth : MonoBehaviour
         animator.SetTrigger("Hit");
 
         isHealing = false;
-        healingProgress = 0f;
 
         equipmentReference.GetShield().SetActive(true);
         equipmentReference.GetHealthPotion().SetActive(false);
         PlayerStateManager.Instance.SetState(PlayerStateType.Idle);
     }
 
+    public void ApplyHealEffect()
+    {
+        if (isHealing && !isHealingApplied)
+        {
+            Heal(potionHealAmount);
+            isHealingApplied = true;
+        }
+    }
+
     public void Heal(int healAmount)
     {
+        GameObject healingParticles = Instantiate(healingEffect, transform);
+        Destroy(healingParticles, 1.25f);
         potionQuantity -= 1;
         currentHealth = Mathf.Min(currentHealth + healAmount, maxHealth);
         OnPlayerHealed?.Invoke(healAmount);
@@ -125,7 +111,8 @@ public class PlayerHealth : MonoBehaviour
     private void CompleteHealingAnimation()
     {
         isHealing = false;
-        healingProgress = 0f;
+        isHealingApplied = false;
+
         equipmentReference.GetShield().SetActive(true);
         equipmentReference.GetHealthPotion().SetActive(false);
         PlayerStateManager.Instance.SetState(PlayerStateType.Idle);
