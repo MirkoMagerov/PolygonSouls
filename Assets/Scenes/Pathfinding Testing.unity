@@ -2043,47 +2043,6 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2739192175399867525, guid: 6d9783c23f43a1c428e57f687f5d7f46,
-        type: 3}
-      propertyPath: m_SizeDelta.x
-      value: 28.39353
-      objectReference: {fileID: 0}
-    - target: {fileID: 2739192175399867525, guid: 6d9783c23f43a1c428e57f687f5d7f46,
-        type: 3}
-      propertyPath: m_SizeDelta.y
-      value: 21.59874
-      objectReference: {fileID: 0}
-    - target: {fileID: 2739192175399867525, guid: 6d9783c23f43a1c428e57f687f5d7f46,
-        type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: -0.9
-      objectReference: {fileID: 0}
-    - target: {fileID: 2739192175399867525, guid: 6d9783c23f43a1c428e57f687f5d7f46,
-        type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0.9
-      objectReference: {fileID: 0}
-    - target: {fileID: 2903215501180424898, guid: 6d9783c23f43a1c428e57f687f5d7f46,
-        type: 3}
-      propertyPath: m_Sprite
-      value: 
-      objectReference: {fileID: 21300000, guid: ace9235321a94454d914f1303735f323,
-        type: 3}
-    - target: {fileID: 2903215501180424898, guid: 6d9783c23f43a1c428e57f687f5d7f46,
-        type: 3}
-      propertyPath: m_Color.b
-      value: 0.8867924
-      objectReference: {fileID: 0}
-    - target: {fileID: 2903215501180424898, guid: 6d9783c23f43a1c428e57f687f5d7f46,
-        type: 3}
-      propertyPath: m_Color.g
-      value: 0.8867924
-      objectReference: {fileID: 0}
-    - target: {fileID: 2903215501180424898, guid: 6d9783c23f43a1c428e57f687f5d7f46,
-        type: 3}
-      propertyPath: m_Color.r
-      value: 0.8867924
-      objectReference: {fileID: 0}
     - target: {fileID: 3283855697052103556, guid: 6d9783c23f43a1c428e57f687f5d7f46,
         type: 3}
       propertyPath: m_AnchorMax.x
@@ -2109,16 +2068,6 @@ PrefabInstance:
       propertyPath: m_Camera
       value: 
       objectReference: {fileID: 8944336655556485667}
-    - target: {fileID: 7791090699270237131, guid: 6d9783c23f43a1c428e57f687f5d7f46,
-        type: 3}
-      propertyPath: m_fontStyle
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8178472736920261718, guid: 6d9783c23f43a1c428e57f687f5d7f46,
-        type: 3}
-      propertyPath: healingThreshold
-      value: 0.55
-      objectReference: {fileID: 0}
     - target: {fileID: 8315739475585068037, guid: 6d9783c23f43a1c428e57f687f5d7f46,
         type: 3}
       propertyPath: target
