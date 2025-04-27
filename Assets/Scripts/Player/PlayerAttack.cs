@@ -6,7 +6,6 @@ public class PlayerAttack : MonoBehaviour
     public bool isAttacking = false;
     private int currentAttackIndex = 0;
     private bool attackWindow;
-    private bool hitRegisteredThisAttack;
     private float lastAttackTime;
 
     [Header("Stamina Costs")]
@@ -46,6 +45,7 @@ public class PlayerAttack : MonoBehaviour
 
         if (!playerStamina.HasEnoughStamina(GetStaminaCostForAttack(currentAttackIndex))) return;
 
+        if (currentAttackIndex == 0) ConsumeStamina();
         lastAttackTime = Time.time;
         PlayerStateManager.Instance.SetState(PlayerStateType.Attacking);
         isAttacking = true;
@@ -97,10 +97,6 @@ public class PlayerAttack : MonoBehaviour
     public void SetAttackWindowActive(int isActive)
     {
         attackWindow = isActive == 1;
-        if (isActive == 1)
-        {
-            hitRegisteredThisAttack = false;
-        }
     }
 
     public bool GetAttackWindow() => attackWindow;

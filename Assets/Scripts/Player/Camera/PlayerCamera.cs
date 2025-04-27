@@ -7,8 +7,6 @@ public class PlayerCamera : MonoBehaviour
     public GameObject CameraTarget;
     private float topClampFreeLook = 60.0f;
     private float bottomClampFreeLook = -25.0f;
-    private float topClampLockOn = 35.0f;
-    private float bottomClampLockOn = -15.0f;
 
     private float targetYaw;
     private float targetPitch;
@@ -35,31 +33,20 @@ public class PlayerCamera : MonoBehaviour
     {
         const float threshold = 0.01f;
 
-        if (playerLockOn.GetEnemyLockedOn())
+        if (!playerLockOn.GetEnemyLockedOn())
         {
-            Transform target = playerLockOn.GetCurrentTarget();
-            Vector3 direction = target.position - CameraTarget.transform.position;
-            Quaternion targetRotation = Quaternion.LookRotation(direction.normalized);
+            if (input.look.sqrMagnitude >= threshold)
+            {
+                float deltaTime = IsUsingMouse() ? 1.0f : Time.deltaTime;
+                targetYaw += input.look.x * deltaTime;
+                targetPitch += input.look.y * deltaTime;
+            }
 
-            Vector3 euler = targetRotation.eulerAngles;
-            euler.x = ClampAngle(euler.x, bottomClampLockOn, topClampLockOn);
+            targetYaw = ClampAngle(targetYaw, float.MinValue, float.MaxValue);
+            targetPitch = ClampAngle(targetPitch, bottomClampFreeLook, topClampFreeLook);
 
-            CameraTarget.transform.rotation = Quaternion.Euler(euler.x, euler.y, 0.0f);
-
-            return;
+            CameraTarget.transform.rotation = Quaternion.Euler(targetPitch, targetYaw, 0.0f);
         }
-
-        if (input.look.sqrMagnitude >= threshold)
-        {
-            float deltaTime = IsUsingMouse() ? 1.0f : Time.deltaTime;
-            targetYaw += input.look.x * deltaTime;
-            targetPitch += input.look.y * deltaTime;
-        }
-
-        targetYaw = ClampAngle(targetYaw, float.MinValue, float.MaxValue);
-        targetPitch = ClampAngle(targetPitch, bottomClampFreeLook, topClampFreeLook);
-
-        CameraTarget.transform.rotation = Quaternion.Euler(targetPitch, targetYaw, 0.0f);
     }
 
     private static float ClampAngle(float angle, float min, float max)

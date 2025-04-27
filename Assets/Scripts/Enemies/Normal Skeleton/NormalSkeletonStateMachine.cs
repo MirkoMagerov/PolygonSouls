@@ -47,8 +47,8 @@ public class NormalSkeletonStateMachine : MonoBehaviour
 
     public event Action OnPlayerDetected;
     public event Action OnPlayerLost;
-    public event Action<float> OnCloseRangeAttack; // Parámetro: cooldown
-    public event Action<float> OnChargeAttack; // Parámetro: cooldown
+    public event Action<float> OnCloseRangeAttack;
+    public event Action<float> OnChargeAttack;
     public event Action OnAttackFinished;
     public event Action OnHit;
     public event Action OnHitFinished;

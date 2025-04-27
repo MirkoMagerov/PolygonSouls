@@ -8,23 +8,20 @@ public class ShieldBlock : MonoBehaviour
     public float damageReduction = 0.7f;
     private Animator animator;
     private StarterAssetsInputs input;
+    private PlayerStamina playerStamina;
+    private PlayerHealth playerHealth;
 
     void Start()
     {
         animator = GetComponent<Animator>();
         input = GetComponent<StarterAssetsInputs>();
+        playerStamina = GetComponentInParent<PlayerStamina>();
+        playerHealth = GetComponentInParent<PlayerHealth>();
     }
 
     void Update()
     {
-        if (input.isBlocking)
-        {
-            animator.SetBool("Blocking", true);
-        }
-        else
-        {
-            animator.SetBool("Blocking", false);
-        }
+        animator.SetBool("Blocking", input.isBlocking);
     }
 
     public bool IsBlockingActive()
@@ -36,31 +33,18 @@ public class ShieldBlock : MonoBehaviour
     {
         Vector3 directionToAttack = (attackPosition - transform.position).normalized;
         float angle = Vector3.Angle(transform.forward, directionToAttack);
-
         return angle <= blockAngle;
     }
 
-    private void OnTriggerEnter(Collider other)
+    public void ApplyReducedDamage(int damage, int staminaCost)
     {
-        if (!input.isBlocking) return;
+        float reducedDamage = damage * (1 - damageReduction);
 
-        if (other.TryGetComponent<EnemyWeapon>(out var enemyWeapon))
-        {
-            if (IsInBlockAngle(other.transform.position))
-            {
-                float reducedDamage = enemyWeapon.GetDamage() * (1 - damageReduction);
+        playerStamina.UseStamina(staminaCost);
 
-                PlayerStamina stamina = GetComponentInParent<PlayerStamina>();
-                stamina.UseStamina(enemyWeapon.GetStaminaCost());
+        playerHealth.TakeDamage((int)Math.Round(reducedDamage));
 
-                TryGetComponent<PlayerHealth>(out var playerHealth);
-                playerHealth.TakeDamage((int)Math.Round(reducedDamage));
-
-                Debug.Log("¡Ataque bloqueado! Daño reducido a: " + reducedDamage);
-
-                PlayBlockEffects();
-            }
-        }
+        PlayBlockEffects();
     }
 
     private void PlayBlockEffects()

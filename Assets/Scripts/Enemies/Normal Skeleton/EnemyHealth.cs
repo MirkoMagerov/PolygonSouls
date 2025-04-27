@@ -1,6 +1,6 @@
 using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.UI;
 
 public class EnemyHealth : MonoBehaviour
@@ -87,7 +87,14 @@ public class EnemyHealth : MonoBehaviour
     private void Die()
     {
         OnEnemyDeath?.Invoke(transform);
+        animator.SetTrigger("Dead");
+        healthBarCanvas.gameObject.SetActive(false);
 
-        Destroy(gameObject);
+        TryGetComponent(out NormalSkeletonStateMachine stateMachine);
+        stateMachine.enabled = false;
+        TryGetComponent(out CharacterController characterController);
+        characterController.enabled = false;
+        TryGetComponent(out NavMeshAgent navMeshAgent);
+        navMeshAgent.enabled = false;
     }
 }

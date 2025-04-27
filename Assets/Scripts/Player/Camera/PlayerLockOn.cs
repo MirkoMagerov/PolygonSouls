@@ -17,10 +17,6 @@ public class PlayerLockOn : MonoBehaviour
     [SerializeField] private float maxNoticeAngle = 60f;
     [SerializeField] private float crosshairScale = 0.1f;
 
-    [Header("Camera Constraints")]
-    [SerializeField] private float minVerticalAngle = -20f;
-    [SerializeField] private float maxVerticalAngle = 50f;
-
     [SerializeField] GameObject lockOnCanvas;
 
     Transform cam;

@@ -8,10 +8,13 @@ public class PlayerHealth : MonoBehaviour
     public Action<int> OnPlayerHealed;
     public static Action OnPlayerDied;
 
-    [SerializeField] private int potionHealAmount = 30;
+    [SerializeField] private int potionHealAmount = 20;
     [SerializeField] private int initialPotions = 5;
+    [SerializeField] private int currentPotionLevel = 0;
     [SerializeField] private int maxHealth = 100;
+    [SerializeField] private float healingParticlesDuration = 1.65f;
     [SerializeField] TextMeshProUGUI potionAmountText;
+    [SerializeField] TextMeshProUGUI potionLevelText;
     [SerializeField] GameObject healingEffect;
     private int currentHealth;
     private int potionQuantity;
@@ -101,13 +104,14 @@ public class PlayerHealth : MonoBehaviour
     public void Heal(int healAmount)
     {
         GameObject healingParticles = Instantiate(healingEffect, transform);
-        Destroy(healingParticles, 1.25f);
+        Destroy(healingParticles, healingParticlesDuration);
         potionQuantity -= 1;
         currentHealth = Mathf.Min(currentHealth + healAmount, maxHealth);
         OnPlayerHealed?.Invoke(healAmount);
         UpdateUI();
     }
 
+    // Used in animator event
     private void CompleteHealingAnimation()
     {
         isHealing = false;
@@ -123,9 +127,25 @@ public class PlayerHealth : MonoBehaviour
         OnPlayerDied?.Invoke();
     }
 
+    public void LevelUpHealPotion()
+    {
+        if (currentPotionLevel == 5) return;
+        potionHealAmount += currentPotionLevel * 5;
+        currentPotionLevel++;
+    }
+
     public void UpdateUI()
     {
         potionAmountText.text = potionQuantity.ToString();
+
+        if (currentPotionLevel == 0) return;
+        potionLevelText.text = $"+{currentPotionLevel}";
+    }
+
+    public void AddHealthPotion(int amount)
+    {
+        potionQuantity += amount;
+        UpdateUI();
     }
 
     public int GetMaxHealth() { return maxHealth; }

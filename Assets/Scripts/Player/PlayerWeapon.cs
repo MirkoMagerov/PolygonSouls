@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerWeapon : MonoBehaviour
@@ -8,7 +6,6 @@ public class PlayerWeapon : MonoBehaviour
     public int staminaCost = 15;
     private PlayerAttack playerAttack;
 
-    // Start is called before the first frame update
     void Start()
     {
         playerAttack = GetComponentInParent<PlayerAttack>();
@@ -23,6 +20,8 @@ public class PlayerWeapon : MonoBehaviour
             other.TryGetComponent(out EnemyHealth enemyHealth);
             enemyHealth.TakeDamage(damage);
             playerAttack.SetAttackWindowActive(0);
+            other.TryGetComponent(out NormalSkeletonStateMachine skeletonStateMachine);
+            skeletonStateMachine.SetAttackWindowActive(0);
         }
     }
 }
