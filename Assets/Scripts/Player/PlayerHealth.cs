@@ -132,6 +132,7 @@ public class PlayerHealth : MonoBehaviour
         if (currentPotionLevel == 5) return;
         potionHealAmount += currentPotionLevel * 5;
         currentPotionLevel++;
+        UpdateUI();
     }
 
     public void UpdateUI()

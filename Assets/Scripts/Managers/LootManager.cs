@@ -22,7 +22,16 @@ public class LootManager : MonoBehaviour
         if (activeLoots.TryGetValue(id, out LootableItemSO loot))
         {
             activeLoots.Remove(id);
-            GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerHealth>().AddHealthPotion(loot.dropAmount);
+            switch(loot.itemType)
+            {
+                case ItemType.VitalEssence:
+                    GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerHealth>().AddHealthPotion(loot.dropAmount);
+                    break;
+                case ItemType.VitalEssenceUpgrade:
+                    GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerHealth>().LevelUpHealPotion();
+                    break;
+            }
+            
             return loot;
         }
         return null;

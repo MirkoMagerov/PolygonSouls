@@ -61,7 +61,5 @@ public class LootVisual : MonoBehaviour
         CanvasLootableItem canvasItem = lootPanel.GetComponent<CanvasLootableItem>();
         canvasItem.InitializeCanvas(lootableItem);
         lootPanel.SetActive(true);
-
-        lootableItem.OnLoot(GameObject.FindGameObjectWithTag("Player"));
     }
 }
