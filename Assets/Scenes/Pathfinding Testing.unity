@@ -7208,51 +7208,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 23533212025523905, guid: 5586307712f408348a0f9174c2917075,
-        type: 3}
-      propertyPath: ShoulderOffset.y
-      value: 0.8
-      objectReference: {fileID: 0}
-    - target: {fileID: 23533212025523905, guid: 5586307712f408348a0f9174c2917075,
-        type: 3}
-      propertyPath: ShoulderOffset.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 548991486954286189, guid: 5586307712f408348a0f9174c2917075,
-        type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -6.710465
-      objectReference: {fileID: 0}
-    - target: {fileID: 548991486954286189, guid: 5586307712f408348a0f9174c2917075,
-        type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1.8054271
-      objectReference: {fileID: 0}
-    - target: {fileID: 548991486954286189, guid: 5586307712f408348a0f9174c2917075,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -14.213266
-      objectReference: {fileID: 0}
-    - target: {fileID: 548991486954286189, guid: 5586307712f408348a0f9174c2917075,
-        type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.9528414
-      objectReference: {fileID: 0}
-    - target: {fileID: 548991486954286189, guid: 5586307712f408348a0f9174c2917075,
-        type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0.013500803
-      objectReference: {fileID: 0}
-    - target: {fileID: 548991486954286189, guid: 5586307712f408348a0f9174c2917075,
-        type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0.3031379
-      objectReference: {fileID: 0}
-    - target: {fileID: 548991486954286189, guid: 5586307712f408348a0f9174c2917075,
-        type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0.004295159
-      objectReference: {fileID: 0}
     - target: {fileID: 2119234653145083691, guid: 5586307712f408348a0f9174c2917075,
         type: 3}
       propertyPath: m_Follow
@@ -7262,7 +7217,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LookAt
       value: 
-      objectReference: {fileID: 1331230415}
+      objectReference: {fileID: 0}
     - target: {fileID: 3850371282948580522, guid: 5586307712f408348a0f9174c2917075,
         type: 3}
       propertyPath: m_Follow
@@ -7272,36 +7227,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: MainCamera
-      objectReference: {fileID: 0}
-    - target: {fileID: 4701823492328695971, guid: 5586307712f408348a0f9174c2917075,
-        type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -7.2783756
-      objectReference: {fileID: 0}
-    - target: {fileID: 4701823492328695971, guid: 5586307712f408348a0f9174c2917075,
-        type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1.4354336
-      objectReference: {fileID: 0}
-    - target: {fileID: 4701823492328695971, guid: 5586307712f408348a0f9174c2917075,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -13.800609
-      objectReference: {fileID: 0}
-    - target: {fileID: 4714648842698916597, guid: 5586307712f408348a0f9174c2917075,
-        type: 3}
-      propertyPath: m_CameraDistance
-      value: 6
-      objectReference: {fileID: 0}
-    - target: {fileID: 5695954344950967432, guid: 5586307712f408348a0f9174c2917075,
-        type: 3}
-      propertyPath: m_DeadZoneHeight
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5695954344950967432, guid: 5586307712f408348a0f9174c2917075,
-        type: 3}
-      propertyPath: m_SoftZoneHeight
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6328695613764184769, guid: 5586307712f408348a0f9174c2917075,
         type: 3}
@@ -7356,12 +7281,7 @@ PrefabInstance:
     - target: {fileID: 7336310130860283808, guid: 5586307712f408348a0f9174c2917075,
         type: 3}
       propertyPath: m_ChildCameras.Array.size
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 7406286700241291821, guid: 5586307712f408348a0f9174c2917075,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
