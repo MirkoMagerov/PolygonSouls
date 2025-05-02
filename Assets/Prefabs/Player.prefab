@@ -1064,9 +1064,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   potionHealAmount: 30
   initialPotions: 5
+  currentPotionLevel: 0
   maxHealth: 100
   healingParticlesDuration: 1.5
   potionAmountText: {fileID: 7791090699270237131}
+  potionLevelText: {fileID: 4892168589476147828}
   healingEffect: {fileID: 1247282762272248, guid: 9ab168a77239b3d43be281129b95e8b8,
     type: 3}
 --- !u!114 &8315734598374434009
@@ -6701,7 +6703,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 3
   m_TargetDisplay: 0
 --- !u!114 &4714923802245081379
 MonoBehaviour:

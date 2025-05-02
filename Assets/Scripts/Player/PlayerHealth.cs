@@ -32,19 +32,16 @@ public class PlayerHealth : MonoBehaviour
         equipmentReference = GetComponent<PlayerEquipmentReference>();
         animator = GetComponent<Animator>();
         input = GetComponent<StarterAssetsInputs>();
+        input.OnHealPerformed += StartHealing;
         currentHealth = maxHealth;
         potionQuantity = initialPotions;
 
         UpdateUI();
     }
 
-    void Update()
+    void OnDestroy()
     {
-        if (input.isHealing && PlayerStateManager.Instance.GetCurrentState().CanHeal && !isHealing && potionQuantity > 0)
-        {
-            input.isHealing = false;
-            StartHealing();
-        }
+        input.OnHealPerformed -= StartHealing;
     }
 
     public void TakeDamage(int damage)
@@ -72,12 +69,17 @@ public class PlayerHealth : MonoBehaviour
 
     private void StartHealing()
     {
-        isHealing = true;
-        isHealingApplied = false;
-        PlayerStateManager.Instance.SetState(PlayerStateType.Healing);
-        equipmentReference.GetShield().SetActive(false);
-        equipmentReference.GetHealthPotion().SetActive(true);
-        animator.SetTrigger("Heal");
+        if (PlayerStateManager.Instance.GetCurrentState().CanHeal && !isHealing && potionQuantity > 0)
+        {
+            input.isHealing = false;
+            isHealing = true;
+            isHealingApplied = false;
+            PlayerStateManager.Instance.SetState(PlayerStateType.Healing);
+            equipmentReference.GetShield().SetActive(false);
+            equipmentReference.GetHealthPotion().SetActive(true);
+            animator.SetTrigger("Heal");
+        }
+
     }
 
     private void InterruptHealing()
@@ -111,22 +113,6 @@ public class PlayerHealth : MonoBehaviour
         UpdateUI();
     }
 
-    // Used in animator event
-    private void CompleteHealingAnimation()
-    {
-        isHealing = false;
-        isHealingApplied = false;
-
-        equipmentReference.GetShield().SetActive(true);
-        equipmentReference.GetHealthPotion().SetActive(false);
-        PlayerStateManager.Instance.SetState(PlayerStateType.Idle);
-    }
-
-    public void Die()
-    {
-        OnPlayerDied?.Invoke();
-    }
-
     public void LevelUpHealPotion()
     {
         if (currentPotionLevel == 5) return;
@@ -147,6 +133,27 @@ public class PlayerHealth : MonoBehaviour
     {
         potionQuantity += amount;
         UpdateUI();
+    }
+
+    public void ResetHealth()
+    {
+        currentHealth = maxHealth;
+    }
+
+    public void Die()
+    {
+        OnPlayerDied?.Invoke();
+    }
+
+    // Used in animator event
+    private void CompleteHealingAnimation()
+    {
+        isHealing = false;
+        isHealingApplied = false;
+
+        equipmentReference.GetShield().SetActive(true);
+        equipmentReference.GetHealthPotion().SetActive(false);
+        PlayerStateManager.Instance.SetState(PlayerStateType.Idle);
     }
 
     public int GetMaxHealth() { return maxHealth; }

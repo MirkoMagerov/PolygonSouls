@@ -12,11 +12,17 @@ public class LootVisual : MonoBehaviour
     {
         collectPrompt.SetActive(false);
         lootPanel.SetActive(false);
+        StarterAssetsInputs.OnInteractPerformed += HandleItemLoot;
     }
 
-    void Update()
+    void OnDestroy()
     {
-        if (isPlayerInRange && Input.GetKeyDown(KeyCode.E))
+        StarterAssetsInputs.OnInteractPerformed -= HandleItemLoot;
+    }
+
+    private void HandleItemLoot()
+    {
+        if (isPlayerInRange)
         {
             if (!looted)
             {
@@ -28,6 +34,7 @@ public class LootVisual : MonoBehaviour
                 Destroy(gameObject);
             }
         }
+
     }
 
     void OnTriggerEnter(Collider other)

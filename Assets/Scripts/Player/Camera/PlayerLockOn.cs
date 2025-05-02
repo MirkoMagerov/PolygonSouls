@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class PlayerLockOn : MonoBehaviour
 {
+    public delegate void LockOnTargetFound(Transform enemyCameraRoot);
+    public static event LockOnTargetFound OnLockOnTargetFound;
+
     [SerializeField] private Transform currentTarget;
     [SerializeField] SimpleLockOn simpleLockOn;
     private Animator anim;
@@ -71,6 +74,7 @@ public class PlayerLockOn : MonoBehaviour
 
     private void FoundTarget()
     {
+        OnLockOnTargetFound.Invoke(currentTarget.transform);
         lockOnCanvas.SetActive(true);
         anim.SetLayerWeight(1, 0f);
         anim.SetLayerWeight(2, 1f);
@@ -82,6 +86,7 @@ public class PlayerLockOn : MonoBehaviour
 
     private void ResetTarget()
     {
+        OnLockOnTargetFound.Invoke(null);
         if (currentTarget != null)
         {
             currentTarget.TryGetComponent(out EnemyHealth enemyHealth);

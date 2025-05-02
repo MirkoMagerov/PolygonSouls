@@ -1,18 +1,13 @@
 using UnityEngine;
-using StarterAssets;
 
-[RequireComponent(typeof(PlayerMovement))]
-[RequireComponent(typeof(PlayerCamera))]
-[RequireComponent(typeof(PlayerStamina))]
-[RequireComponent(typeof(PlayerDodge))]
 public class PlayerController : MonoBehaviour
 {
     private Animator anim;
     private StarterAssetsInputs input;
-
     private PlayerMovement movement;
     private PlayerCamera cameraControl;
     private PlayerDodge dodge;
+    private PlayerHealth health;
 
     private void Awake()
     {
@@ -22,12 +17,19 @@ public class PlayerController : MonoBehaviour
         movement = GetComponent<PlayerMovement>();
         cameraControl = GetComponent<PlayerCamera>();
         dodge = GetComponent<PlayerDodge>();
+        health = GetComponent<PlayerHealth>();
     }
 
     void Start()
     {
         anim.SetLayerWeight(0, 0f);
         anim.SetLayerWeight(1, 1f);
+        input.OnDodgePerformed += HandleDodge;
+    }
+
+    void OnDestroy()
+    {
+        input.OnDodgePerformed -= HandleDodge;
     }
 
     private void Update()
@@ -35,7 +37,10 @@ public class PlayerController : MonoBehaviour
         movement.GroundedCheck();
         movement.HandleJumpAndGravity();
         movement.HandleMovement();
+    }
 
+    private void HandleDodge()
+    {
         if (!dodge.IsDodging)
         {
             if (input.dodge && dodge.CanDodge() && PlayerStateManager.Instance.GetCurrentState().CanDodge)
@@ -51,6 +56,16 @@ public class PlayerController : MonoBehaviour
             }
             input.dodge = false;
         }
+    }
+
+    public void PlayDeathAnimation()
+    {
+        anim.SetTrigger("Die");
+    }
+
+    public void ResetHealth()
+    {
+        health.ResetHealth();
     }
 
     private void LateUpdate()

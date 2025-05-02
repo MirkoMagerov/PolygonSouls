@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -5,6 +6,10 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
     public PlayerInput inputSystem;
+    public PlayerController playerController;
+    [SerializeField] private Transform lastBonfirePosition;
+
+    private EnemyManager enemyManager;
 
     void Awake()
     {
@@ -19,18 +24,7 @@ public class GameManager : MonoBehaviour
         }
 
         inputSystem = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerInput>();
-    }
-
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            DisableInputSystem();
-        }
-        if (Input.GetKeyDown(KeyCode.Tab))
-        {
-            EnableInputSystem();
-        }
+        playerController = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>();
     }
 
     void OnEnable()
@@ -53,8 +47,42 @@ public class GameManager : MonoBehaviour
         inputSystem.ActivateInput();
     }
 
+    public void SetLastBonfirePosition(Transform bonfireTransform)
+    {
+        lastBonfirePosition = bonfireTransform;
+    }
+
     private void HandlePlayerDeath()
     {
+        StartCoroutine(PlayerDeathCoroutine());
+    }
+
+    public void RegisterEnemyManager(EnemyManager manager)
+    {
+        enemyManager = manager;
+    }
+
+    private IEnumerator PlayerDeathCoroutine()
+    {
         DisableInputSystem();
+        playerController.PlayDeathAnimation();
+
+        yield return new WaitForSeconds(3f);
+
+        //FadeScreenToBlack();
+        //yield return new WaitForSeconds(1f);
+
+        playerController.gameObject.transform.SetPositionAndRotation(lastBonfirePosition.position, lastBonfirePosition.rotation);
+        playerController.ResetHealth();
+
+        //enemyManager.RespawnAllEnemies();
+
+        //saveSystem.LoadGame(playerController, enemyManager);
+
+        // Fade-out y activar input
+        //FadeScreenFromBlack();
+        yield return new WaitForSeconds(1f);
+
+        EnableInputSystem();
     }
 }

@@ -14,25 +14,25 @@ public class PlayerAttack : MonoBehaviour
     public int thirdAttackCost = 14;
 
     private Animator animator;
-    private StarterAssetsInputs inputActions;
+    private StarterAssetsInputs input;
     private PlayerStamina playerStamina;
 
     void Start()
     {
         animator = GetComponent<Animator>();
-        inputActions = GetComponent<StarterAssetsInputs>();
+        input = GetComponent<StarterAssetsInputs>();
+        input.OnAttackPerformed += Attack;
         playerStamina = GetComponent<PlayerStamina>();
         AutomatizeAnimationEvents();
     }
 
+    void OnDestroy()
+    {
+        input.OnAttackPerformed -= Attack;
+    }
+
     void Update()
     {
-        if (inputActions.primaryAttack)
-        {
-            Attack();
-            inputActions.primaryAttack = false;
-        }
-
         if (Time.time - lastAttackTime > COMBO_WINDOW && !isAttacking)
         {
             currentAttackIndex = 0;
@@ -45,6 +45,7 @@ public class PlayerAttack : MonoBehaviour
 
         if (!playerStamina.HasEnoughStamina(GetStaminaCostForAttack(currentAttackIndex))) return;
 
+        input.primaryAttack = false;
         if (currentAttackIndex == 0) ConsumeStamina();
         lastAttackTime = Time.time;
         PlayerStateManager.Instance.SetState(PlayerStateType.Attacking);

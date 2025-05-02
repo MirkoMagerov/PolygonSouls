@@ -1,5 +1,4 @@
 using UnityEngine;
-using StarterAssets;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour
@@ -19,7 +18,6 @@ public class PlayerMovement : MonoBehaviour
     public float GroundedRadius = 0.28f;
     public LayerMask GroundLayers;
 
-    // Movement fields
     private float speed;
     private float animationBlend;
     private float targetRotation = 0.0f;
@@ -27,14 +25,11 @@ public class PlayerMovement : MonoBehaviour
     public float verticalVelocity { get; private set; }
     private float jumpTimeoutDelta;
 
-    // Animation IDs
     private int animIDSpeed;
     private int animIDGrounded;
-    private int animIDJump;
     private int animIDFreeFall;
     private int animIDMotionSpeed;
 
-    // Referencias
     private CharacterController controller;
     private StarterAssetsInputs input;
     private Animator animator;
@@ -62,7 +57,6 @@ public class PlayerMovement : MonoBehaviour
     {
         animIDSpeed = Animator.StringToHash("Speed");
         animIDGrounded = Animator.StringToHash("Grounded");
-        animIDJump = Animator.StringToHash("Jump");
         animIDFreeFall = Animator.StringToHash("FreeFall");
         animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
     }
@@ -165,19 +159,11 @@ public class PlayerMovement : MonoBehaviour
                 PlayerStateManager.Instance.SetState(PlayerStateType.Idle);
             }
 
-            animator.SetBool(animIDJump, false);
             animator.SetBool(animIDFreeFall, false);
 
             if (verticalVelocity < 0.0f)
             {
                 verticalVelocity = 0f;
-            }
-
-            if (input.jump && jumpTimeoutDelta <= 0.0f)
-            {
-                verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
-
-                animator.SetBool(animIDJump, true);
             }
 
             if (jumpTimeoutDelta >= 0.0f)
@@ -191,8 +177,6 @@ public class PlayerMovement : MonoBehaviour
             jumpTimeoutDelta = JumpTimeout;
 
             animator.SetBool(animIDFreeFall, true);
-
-            input.jump = false;
         }
 
         verticalVelocity += Gravity * Time.deltaTime;

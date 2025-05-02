@@ -16,8 +16,9 @@ public abstract class EnemyBaseState
     public abstract void ExitState();
 }
 
-public class NormalSkeletonStateMachine : MonoBehaviour
+public class NormalSkeletonStateMachine : MonoBehaviour, IEnemyDeathNotifier, IPatrolPointUser
 {
+    public event Action OnDeath;
     private NavMeshAgent agent;
     private Animator animator;
     private Transform player;
@@ -68,11 +69,10 @@ public class NormalSkeletonStateMachine : MonoBehaviour
 
     private void Awake()
     {
-        if (agent == null) agent = GetComponent<NavMeshAgent>();
-        if (animator == null) animator = GetComponent<Animator>();
-        if (player == null) player = GameObject.FindGameObjectWithTag("Player").transform;
+        agent = GetComponent<NavMeshAgent>();
+        animator = GetComponent<Animator>();
+        player = GameObject.FindGameObjectWithTag("Player").transform;
 
-        // Crear estados
         PatrolState = new PatrolState(this);
         ChaseState = new ChaseState(this);
         AttackState = new AttackState(this);
@@ -87,6 +87,11 @@ public class NormalSkeletonStateMachine : MonoBehaviour
         ChangeState(PatrolState);
     }
 
+    private void Update()
+    {
+        currentState?.UpdateState();
+    }
+
     private void SubscribeToEvents()
     {
         OnPlayerDetected += () => ChangeState(ChaseState);
@@ -97,9 +102,9 @@ public class NormalSkeletonStateMachine : MonoBehaviour
         OnHitFinished += () => ChangeState(ChaseState);
     }
 
-    private void Update()
+    public void SetPatrolPoints(Transform[] points)
     {
-        currentState?.UpdateState();
+        patrolPoints = points;
     }
 
     public void ChangeState(EnemyBaseState newState)
