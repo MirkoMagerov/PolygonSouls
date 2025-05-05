@@ -45,11 +45,36 @@ public class Bonfire : MonoBehaviour
             interactionCanvas.SetActive(false);
             lightUp = true;
             SaveGameState();
+
+            // Registrar esta hoguera como punto de respawn
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.SetLastBonfirePosition(transform);
+            }
         }
     }
 
     private void SaveGameState()
     {
-        Debug.Log("Game state saved.");
+        if (SaveSystem.Instance != null && GameManager.Instance != null)
+        {
+            // Obtener EnemyManager
+            EnemyManager enemyManager = FindObjectOfType<EnemyManager>();
+            if (enemyManager != null)
+            {
+                // Guardar los IDs de enemigos muertos y la posición del jugador
+                Transform playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
+                SaveSystem.Instance.SaveGame(enemyManager.GetDeadEnemyIDs(), playerTransform);
+                Debug.Log("Estado del juego guardado en la hoguera.");
+            }
+            else
+            {
+                Debug.LogWarning("No se encontró EnemyManager para guardar estado de enemigos.");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("SaveSystem o GameManager no encontrados. No se puede guardar el juego.");
+        }
     }
 }

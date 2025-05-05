@@ -91,6 +91,7 @@ public class EnemyHealth : MonoBehaviour
         healthBarCanvas.gameObject.SetActive(false);
 
         TryGetComponent(out NormalSkeletonStateMachine stateMachine);
+        stateMachine.NotifyDeath();
         stateMachine.enabled = false;
         TryGetComponent(out CharacterController characterController);
         characterController.enabled = false;

@@ -33,13 +33,11 @@ public class EnemyManager : MonoBehaviour
 
     public void RestoreEnemyState(List<string> deadEnemyIDs)
     {
-        // Respawnear todos primero
         foreach (EnemySpawner spawner in enemySpawners) spawner.RespawnEnemy();
 
         foreach (EnemySpawner spawner in enemySpawners)
         {
             if (deadEnemyIDs.Contains(spawner.GetEnemyID())) spawner.ForceKill();
         }
-
     }
 }

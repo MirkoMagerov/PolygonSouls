@@ -116,7 +116,6 @@ public class NormalSkeletonStateMachine : MonoBehaviour, IEnemyDeathNotifier, IP
         currentState.EnterState();
     }
 
-    // Métodos para invocar eventos
     public void DetectPlayer() => OnPlayerDetected?.Invoke();
     public void LosePlayer() => OnPlayerLost?.Invoke();
     public void PerformCloseAttack() => OnCloseRangeAttack?.Invoke(attackCooldown);
@@ -124,6 +123,7 @@ public class NormalSkeletonStateMachine : MonoBehaviour, IEnemyDeathNotifier, IP
     public void FinishAttack() => OnAttackFinished?.Invoke();
     public void TakeHit() => OnHit?.Invoke();
     public void FinishHit() => OnHitFinished?.Invoke();
+    public void NotifyDeath() => OnDeath?.Invoke();
 
     public bool GetAttackWindow() { return attackWindow; }
     public bool GetHitRegisteredThisAttack() { return hitRegisteredThisAttack; }

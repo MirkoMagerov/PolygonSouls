@@ -14,20 +14,32 @@ public interface IPatrolPointUser
 public class EnemySpawner : MonoBehaviour
 {
     [SerializeField] private GameObject enemyPrefab;
-    [SerializeField] private string enemyID;
     [SerializeField] private Transform[] patrolPoints;
+    private string enemyID;
 
     private GameObject spawnedEnemy;
     private bool enemyIsDead = false;
+
+    void Awake()
+    {
+        GenerateUniqueID();
+    }
 
     private void Start()
     {
         SpawnEnemy();
     }
 
+    private void GenerateUniqueID()
+    {
+        string posHash = transform.position.GetHashCode().ToString("X8");
+        string nameHash = gameObject.name.GetHashCode().ToString("X8");
+        enemyID = $"{nameHash}-{posHash}";
+    }
+
     public void SpawnEnemy()
     {
-        if (spawnedEnemy == null && !enemyIsDead)
+        if (!enemyIsDead)
         {
             spawnedEnemy = Instantiate(enemyPrefab, transform.position, transform.rotation);
 
@@ -49,7 +61,7 @@ public class EnemySpawner : MonoBehaviour
     private void ConfigureEnemyData(GameObject enemy)
     {
         IPatrolPointUser patrolUser = enemy.GetComponent<IPatrolPointUser>();
-        if (patrolUser != null && patrolPoints.Length > 0)
+        if (patrolPoints.Length > 0)
         {
             patrolUser.SetPatrolPoints(patrolPoints);
         }
