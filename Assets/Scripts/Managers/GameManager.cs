@@ -31,8 +31,15 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        // Cargar el juego si hay datos guardados
         LoadGameIfSaveExists();
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.F5))
+        {
+            SaveAndRestart();
+        }
     }
 
     void OnEnable()
@@ -46,9 +53,13 @@ public class GameManager : MonoBehaviour
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
+    private void HandlePlayerDeath()
+    {
+        StartCoroutine(PlayerDeathCoroutine());
+    }
+
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // Intentar encontrar el Player y EnemyManager después de cargar la escena
         StartCoroutine(FindReferencesAfterSceneLoad());
     }
 
@@ -63,7 +74,6 @@ public class GameManager : MonoBehaviour
             playerController = player.GetComponent<PlayerController>();
         }
 
-        // Cargar el juego si hay datos guardados
         LoadGameIfSaveExists();
     }
 
@@ -97,22 +107,22 @@ public class GameManager : MonoBehaviour
             GameData loadedData = SaveSystem.Instance.LoadGame();
 
             // Restaurar el estado de los enemigos
-            enemyManager.RestoreEnemyState(loadedData.deadEnemyIDs);
+            enemyManager.RestoreEnemyState(loadedData.deadEnemyIDs, loadedData.enemyDeathData);
 
-            // Si tenemos playerController, restaurar su posición
-            if (playerController != null && lastBonfirePosition == null)
+            // Si tenemos playerController y datos del jugador, restaurar su estado
+            if (playerController != null && loadedData.playerData != null && lastBonfirePosition == null)
             {
-                playerController.transform.position = loadedData.playerPosition;
-                playerController.transform.rotation = loadedData.playerRotation;
+                playerController.transform.SetPositionAndRotation(loadedData.playerData.position.ToVector3(), loadedData.playerData.rotation.ToQuaternion());
+
+                // Restaurar salud si existe el componente
+                if (playerController.TryGetComponent<PlayerHealth>(out var healthComponent))
+                {
+                    healthComponent.SetHealth(loadedData.playerData.health);
+                }
             }
 
             Debug.Log($"Estado de juego cargado. Enemigos muertos: {loadedData.deadEnemyIDs.Count}");
         }
-    }
-
-    private void HandlePlayerDeath()
-    {
-        StartCoroutine(PlayerDeathCoroutine());
     }
 
     private IEnumerator PlayerDeathCoroutine()
@@ -128,10 +138,6 @@ public class GameManager : MonoBehaviour
         }
         playerController.ResetHealth();
 
-        // No respawneamos enemigos muertos
-        // enemyManager.RespawnAllEnemies();
-
-        // En su lugar, cargamos el estado guardado si existe
         LoadGameIfSaveExists();
 
         yield return new WaitForSeconds(1f);
@@ -143,11 +149,22 @@ public class GameManager : MonoBehaviour
     {
         if (enemyManager != null && SaveSystem.Instance != null)
         {
-            // Guardar estado actual
-            Transform playerTransform = playerController != null ? playerController.transform : null;
-            SaveSystem.Instance.SaveGame(enemyManager.GetDeadEnemyIDs(), playerTransform);
+            int playerHealth = 50;
+            if (playerController != null)
+            {
+                if (playerController.TryGetComponent<PlayerHealth>(out var healthComponent))
+                {
+                    playerHealth = healthComponent.GetCurrentHealth();
+                }
 
-            // Reiniciar escena
+                SaveSystem.Instance.SaveGame(
+                    enemyManager.GetDeadEnemyIDs(),
+                    enemyManager.GetEnemyDeathData(),
+                    playerController.transform,
+                    playerHealth
+                );
+            }
+
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
     }

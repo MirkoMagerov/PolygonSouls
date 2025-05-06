@@ -172,7 +172,7 @@ public class PlayerLockOn : MonoBehaviour
         lockOnCanvas.transform.position = targetPosition;
         lockOnCanvas.transform.localScale = (cam.position - targetPosition).magnitude * crosshairScale * Vector3.one;
 
-        enemyTargetLocator.position = targetPosition;
+        //enemyTargetLocator.position = targetPosition;
 
         Vector3 dir = currentTarget.position - transform.position;
         dir.y = 0;

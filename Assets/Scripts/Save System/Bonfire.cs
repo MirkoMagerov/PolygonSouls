@@ -62,10 +62,27 @@ public class Bonfire : MonoBehaviour
             EnemyManager enemyManager = FindObjectOfType<EnemyManager>();
             if (enemyManager != null)
             {
-                // Guardar los IDs de enemigos muertos y la posición del jugador
-                Transform playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
-                SaveSystem.Instance.SaveGame(enemyManager.GetDeadEnemyIDs(), playerTransform);
-                Debug.Log("Estado del juego guardado en la hoguera.");
+                // Obtener el transform del jugador y su salud actual
+                GameObject player = GameObject.FindGameObjectWithTag("Player");
+                if (player != null)
+                {
+                    Transform playerTransform = player.transform;
+                    int playerHealth = 100;
+
+                    // Intentar obtener la salud actual si existe el componente
+                    if (player.TryGetComponent<PlayerHealth>(out var healthComponent))
+                    {
+                        playerHealth = healthComponent.GetCurrentHealth();
+                    }
+
+                    SaveSystem.Instance.SaveGame(
+                     enemyManager.GetDeadEnemyIDs(),
+                     enemyManager.GetEnemyDeathData(),
+                     playerTransform,
+                     playerHealth
+                 );
+                    Debug.Log("Estado del juego guardado en la hoguera.");
+                }
             }
             else
             {

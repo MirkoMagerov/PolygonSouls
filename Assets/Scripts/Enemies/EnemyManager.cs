@@ -31,13 +31,57 @@ public class EnemyManager : MonoBehaviour
         return deadEnemies;
     }
 
-    public void RestoreEnemyState(List<string> deadEnemyIDs)
+    public List<EnemyDeathData> GetEnemyDeathData()
     {
-        foreach (EnemySpawner spawner in enemySpawners) spawner.RespawnEnemy();
+        List<EnemyDeathData> deathDataList = new();
 
         foreach (EnemySpawner spawner in enemySpawners)
         {
-            if (deadEnemyIDs.Contains(spawner.GetEnemyID())) spawner.ForceKill();
+            if (spawner.IsEnemyDead())
+            {
+                string id = spawner.GetEnemyID();
+                Vector3 position = spawner.GetDeathPosition();
+                Quaternion rotation = spawner.GetDeathRotation();
+                deathDataList.Add(new EnemyDeathData(id, position, rotation));
+            }
+        }
+
+        return deathDataList;
+    }
+
+    public void RestoreEnemyState(List<string> deadEnemyIDs, List<EnemyDeathData> deathDataList)
+    {
+        Debug.Log($"Restoring enemy state, dead enemies: {deadEnemyIDs?.Count ?? 0}, death data: {deathDataList?.Count ?? 0}");
+
+        foreach (EnemySpawner spawner in enemySpawners)
+        {
+            spawner.RespawnEnemy();
+        }
+
+        if (deathDataList != null && deathDataList.Count > 0)
+        {
+            foreach (EnemyDeathData deathData in deathDataList)
+            {
+                Debug.Log($"Processing death data for enemy ID: {deathData.enemyID}");
+                EnemySpawner spawner = enemySpawners.Find(s => s.GetEnemyID() == deathData.enemyID);
+
+                if (spawner != null)
+                {
+                    Debug.Log($"Found spawner for enemy ID: {deathData.enemyID}, applying death state");
+                    spawner.ForceKillWithPositionAndRotation(
+                        deathData.deathPosition.ToVector3(),
+                        deathData.deathRotation.ToQuaternion()
+                    );
+                }
+                else
+                {
+                    Debug.LogWarning($"No spawner found for enemy ID: {deathData.enemyID}");
+                }
+            }
+        }
+        else
+        {
+            Debug.Log("No death data available to restore");
         }
     }
 }

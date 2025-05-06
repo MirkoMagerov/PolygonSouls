@@ -156,6 +156,11 @@ public class PlayerHealth : MonoBehaviour
         PlayerStateManager.Instance.SetState(PlayerStateType.Idle);
     }
 
+    public void SetHealth(int health)
+    {
+        currentHealth = Mathf.Clamp(health, 0, maxHealth);
+    }
+
     public int GetMaxHealth() { return maxHealth; }
     public int GetCurrentHealth() { return currentHealth; }
 }

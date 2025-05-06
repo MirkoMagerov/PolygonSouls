@@ -24,7 +24,6 @@ public class EnemyWeapon : MonoBehaviour
 
         if (shieldBlock.IsBlockingActive() && shieldBlock.IsInBlockAngle(transform.root.position))
         {
-            Debug.Log("Shield Block Active");
             shieldBlock.ApplyReducedDamage(damage, staminaCost);
             return;
         }
