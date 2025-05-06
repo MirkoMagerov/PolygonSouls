@@ -1,0 +1,39 @@
+using UnityEngine;
+
+public class DogClawAttackState : DogEnemyState
+{
+    private float attackDuration = 1.0f;
+    private float timer = 0f;
+
+    public DogClawAttackState(DogStateMachine stateMachine) : base(stateMachine) { }
+
+    public override void EnterState()
+    {
+        stateMachine.Agent.isStopped = true;
+        stateMachine.Animator.SetTrigger("Claw");
+        timer = 0f;
+
+        // Mirar hacia el jugador
+        if (stateMachine.Player != null)
+        {
+            Vector3 direction = stateMachine.Player.position - stateMachine.transform.position;
+            direction.y = 0;
+            stateMachine.transform.rotation = Quaternion.LookRotation(direction);
+        }
+    }
+
+    public override void UpdateState()
+    {
+        timer += Time.deltaTime;
+
+        if (timer >= attackDuration)
+        {
+            stateMachine.FinishAttack();
+        }
+    }
+
+    public override void ExitState()
+    {
+        stateMachine.Agent.isStopped = false;
+    }
+}
