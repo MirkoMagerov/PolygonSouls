@@ -51,8 +51,9 @@ public class DogStateMachine : MonoBehaviour
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
-        player = GameObject.FindGameObjectWithTag("Player")?.transform;
+        player = GameObject.FindGameObjectWithTag("Player").transform;
         currentHealth = maxHealth;
+        agent.stoppingDistance = attackRange;
 
         // Inicializar estados
         PatrolState = new DogPatrolState(this);
