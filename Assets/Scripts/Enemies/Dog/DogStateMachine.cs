@@ -31,10 +31,6 @@ public class DogStateMachine : MonoBehaviour
     public int AttackDamage = 20;
     public LayerMask PlayerLayer;
 
-    // Salud
-    private int currentHealth;
-    public int MaxHealth = 100;
-
     private void Awake()
     {
         Agent = GetComponent<NavMeshAgent>();
@@ -48,8 +44,6 @@ public class DogStateMachine : MonoBehaviour
         clawAttackState = new DogClawAttackState(this);
         hitState = new DogHitState(this);
         deathState = new DogDeathState(this);
-
-        currentHealth = MaxHealth;
     }
 
     private void Start()
@@ -121,23 +115,6 @@ public class DogStateMachine : MonoBehaviour
         ChangeState(chaseState);
     }
 
-    public void TakeDamage(int damage)
-    {
-        if (currentState == deathState)
-            return;
-
-        currentHealth -= damage;
-
-        if (currentHealth <= 0)
-        {
-            Die();
-        }
-        else
-        {
-            ChangeState(hitState);
-        }
-    }
-
     public void FinishHit()
     {
         // Después de recibir un golpe, perseguir agresivamente
@@ -189,7 +166,7 @@ public class DogStateMachine : MonoBehaviour
                 Player.GetComponent<PlayerHealth>()?.TakeDamage(AttackDamage);
 
                 // Efecto de sonido de mordisco/zarpazo
-                AudioSource audioSource = GetComponent<AudioSource>();
+                TryGetComponent<AudioSource>(out var audioSource);
                 if (audioSource != null)
                 {
                     audioSource.Play();
