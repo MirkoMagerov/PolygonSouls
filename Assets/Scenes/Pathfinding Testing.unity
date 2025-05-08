@@ -5193,7 +5193,7 @@ MonoBehaviour:
   m_LayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_UseGeometry: 0
+  m_UseGeometry: 1
   m_DefaultArea: 0
   m_GenerateLinks: 0
   m_IgnoreNavMeshAgent: 1
@@ -6707,7 +6707,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1776809992}
   - component: {fileID: 1776809991}
-  - component: {fileID: 1776809990}
   - component: {fileID: 1776809989}
   m_Layer: 0
   m_Name: Minimap Camera
@@ -6760,14 +6759,6 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
---- !u!81 &1776809990
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1776809988}
-  m_Enabled: 1
 --- !u!20 &1776809991
 Camera:
   m_ObjectHideFlags: 0
@@ -11095,17 +11086,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a94e3a559975d664196487582b62e291, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  patrolPoints:
+  PatrolPoints:
   - {fileID: 1324252671}
   - {fileID: 1310058930}
-  - {fileID: 946671517}
-  detectionRadius: 8
-  detectionAngle: 60
-  attackRange: 2
-  attackCooldown: 0.75
-  patrolSpeed: 2
-  chaseSpeed: 4
-  maxHealth: 100
+  PatrolSpeed: 2
+  ChaseSpeed: 4.5
+  AttackRange: 2
+  AttackCooldown: 2
+  DetectionRadius: 10
+  DetectionAngle: 120
+  AttackDamage: 20
+  PlayerLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  MaxHealth: 100
 --- !u!1 &3313746652398789339
 GameObject:
   m_ObjectHideFlags: 0

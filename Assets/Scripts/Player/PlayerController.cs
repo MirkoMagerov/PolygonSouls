@@ -60,7 +60,7 @@ public class PlayerController : MonoBehaviour
 
     public void PlayDeathAnimation()
     {
-        anim.SetTrigger("Die");
+        anim.SetTrigger("Dead");
     }
 
     public void ResetHealth()
