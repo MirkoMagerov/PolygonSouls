@@ -20,8 +20,6 @@ public class PlayerWeapon : MonoBehaviour
             other.TryGetComponent(out EnemyHealth enemyHealth);
             enemyHealth.TakeDamage(damage);
             playerAttack.SetAttackWindowActive(0);
-            other.TryGetComponent(out NormalSkeletonStateMachine skeletonStateMachine);
-            skeletonStateMachine.SetAttackWindowActive(0);
         }
     }
 }

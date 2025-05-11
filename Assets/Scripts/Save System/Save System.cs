@@ -6,6 +6,8 @@ using UnityEngine;
 public class SaveSystem : MonoBehaviour
 {
     public static SaveSystem Instance { get; private set; }
+
+    [SerializeField] private string saveFileName = "savegame.dat";
     private string savePath;
 
     private void Awake()
@@ -14,7 +16,7 @@ public class SaveSystem : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            savePath = Path.Combine(Application.persistentDataPath, "savegame.dat");
+            savePath = Path.Combine(Application.persistentDataPath, saveFileName);
         }
         else
         {
@@ -24,70 +26,103 @@ public class SaveSystem : MonoBehaviour
 
     public void SaveGame(List<string> deadEnemyIDs, List<EnemyDeathData> enemyDeathData, Transform playerTransform, int playerHealth = 100)
     {
+        string activeBonfireID = null;
+        if (BonfireManager.Instance != null)
+        {
+            activeBonfireID = BonfireManager.Instance.GetLastActiveBonfireID();
+        }
+
+        SaveGameWithBonfire(deadEnemyIDs, enemyDeathData, playerTransform, playerHealth, activeBonfireID);
+    }
+
+    public void SaveGameWithBonfire(List<string> deadEnemyIDs, List<EnemyDeathData> enemyDeathData, Transform playerTransform, int playerHealth, string bonfireID)
+    {
         try
         {
-            if (File.Exists(savePath))
-            {
-                File.Delete(savePath);
-            }
-
             BinaryFormatter formatter = new();
-            FileStream file = null;
 
-            try
+            List<string> litBonfireIDs = new List<string>();
+            if (BonfireManager.Instance != null)
             {
-                file = File.Create(savePath);
-
-                GameData data = new GameData
-                {
-                    deadEnemyIDs = deadEnemyIDs,
-                    enemyDeathData = enemyDeathData,
-                    playerData = playerTransform != null
-                    ? new PlayerData(playerTransform, playerHealth)
-                    : null
-                };
-
-                formatter.Serialize(file, data);
-                Debug.Log($"Juego guardado en: {savePath}");
+                litBonfireIDs = BonfireManager.Instance.GetLitBonfireIDs();
             }
-            finally
+
+            GameData data = new()
             {
-                file?.Close();
-            }
+                deadEnemyIDs = deadEnemyIDs ?? new List<string>(),
+                enemyDeathData = enemyDeathData ?? new List<EnemyDeathData>(),
+                playerData = new PlayerData(playerTransform, playerHealth),
+                lastActiveBonfireID = bonfireID,
+                litBonfireIDs = litBonfireIDs
+            };
+
+            using FileStream file = File.Create(savePath);
+            formatter.Serialize(file, data);
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"Error al guardar el juego: {e.Message}");
+            Debug.LogError($"Error al guardar el juego: {e.Message}\n{e.StackTrace}");
         }
     }
 
     public GameData LoadGame()
     {
-        if (File.Exists(savePath))
-        {
-            BinaryFormatter formatter = new BinaryFormatter();
-            FileStream file = null;
+        GameData data = new();
 
-            try
-            {
-                file = File.Open(savePath, FileMode.Open);
-                GameData data = (GameData)formatter.Deserialize(file);
-                Debug.Log($"Juego cargado desde: {savePath}");
-                return data;
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"Error al cargar el juego: {e.Message}");
-                return new GameData();
-            }
-            finally
-            {
-                file?.Close();
-            }
+        if (!File.Exists(savePath))
+        {
+            return data;
         }
 
-        Debug.Log("No se encontró ningún archivo de guardado. Iniciando nuevo juego.");
-        return new GameData();
+        try
+        {
+            BinaryFormatter formatter = new BinaryFormatter();
+
+            using (FileStream file = File.Open(savePath, FileMode.Open))
+            {
+                data = (GameData)formatter.Deserialize(file);
+            }
+
+            return data;
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Error al cargar el juego: {e.Message}\n{e.StackTrace}");
+            return data;
+        }
+    }
+
+    public void DeleteSaveFile()
+    {
+        if (File.Exists(savePath))
+        {
+            File.Delete(savePath);
+        }
+    }
+
+    public void CreateInitialSaveFile()
+    {
+        if (File.Exists(savePath)) return;
+
+        var emptyData = new GameData
+        {
+            deadEnemyIDs = new List<string>(),
+            enemyDeathData = new List<EnemyDeathData>(),
+            playerData = new PlayerData(),
+            litBonfireIDs = new List<string>(),
+            lastActiveBonfireID = null
+        };
+
+        try
+        {
+            BinaryFormatter formatter = new BinaryFormatter();
+            using FileStream file = File.Create(savePath);
+            formatter.Serialize(file, emptyData);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Error al crear archivo inicial: {e.Message}");
+        }
     }
 
     public bool HasSaveFile()

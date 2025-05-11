@@ -1,7 +1,11 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.AI;
 using UnityEngine.UI;
+
+public interface IEnemyStateMachine
+{
+    void NotifyDeath();
+}
 
 public class EnemyHealth : MonoBehaviour
 {
@@ -11,7 +15,8 @@ public class EnemyHealth : MonoBehaviour
     [SerializeField] private Canvas healthBarCanvas;
     [SerializeField] private Slider healthBar;
     [SerializeField] private Slider damageBar;
-    private int maxHealth = 100;
+    [SerializeField] private MonoBehaviour enemyStateMachine;
+    [SerializeField] private int maxHealth = 100;
     private int currentHealth;
     private float damageAnimationDuration = 0.5f;
     private Animator animator;
@@ -48,7 +53,10 @@ public class EnemyHealth : MonoBehaviour
         {
             Die();
         }
-        animator.SetTrigger("Hit");
+        else
+        {
+            animator.SetTrigger("Hit");
+        }
 
         healthBar.value = currentHealth;
 
@@ -87,15 +95,18 @@ public class EnemyHealth : MonoBehaviour
     private void Die()
     {
         OnEnemyDeath?.Invoke(transform);
-        animator.SetTrigger("Dead");
         healthBarCanvas.gameObject.SetActive(false);
 
-        TryGetComponent(out NormalSkeletonStateMachine stateMachine);
-        stateMachine.NotifyDeath();
-        stateMachine.enabled = false;
-        TryGetComponent(out CharacterController characterController);
-        characterController.enabled = false;
-        TryGetComponent(out NavMeshAgent navMeshAgent);
-        navMeshAgent.enabled = false;
+        if (enemyStateMachine is IEnemyStateMachine stateMachine)
+        {
+            stateMachine.NotifyDeath();
+        }
+    }
+
+    public void InstaKill()
+    {
+        currentHealth = 0;
+        healthBar.value = currentHealth;
+        Die();
     }
 }

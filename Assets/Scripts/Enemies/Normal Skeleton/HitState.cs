@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class HitState : EnemyBaseState
 {
-    private float hitDuration = 0.8f;
+    private float hitDuration = 1f;
     private float hitTimer = 0f;
 
     public HitState(NormalSkeletonStateMachine stateMachine) : base(stateMachine) { }

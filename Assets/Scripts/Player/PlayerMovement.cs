@@ -12,6 +12,10 @@ public class PlayerMovement : MonoBehaviour
     public float Gravity = -15.0f;
     public float JumpTimeout = 0.50f;
 
+    [Header("Animation")]
+    public float directionSmoothSpeed = 5.0f;
+    private Vector2 currentAnimDirection = Vector2.zero;
+
     [Header("Player Grounded")]
     public bool Grounded = true;
     public float GroundedOffset = -0.14f;
@@ -130,6 +134,11 @@ public class PlayerMovement : MonoBehaviour
     {
         Vector3 verticalMovement = new Vector3(0.0f, verticalVelocity, 0.0f) * Time.deltaTime;
 
+        currentAnimDirection.x = Mathf.Lerp(currentAnimDirection.x, input.move.x, Time.deltaTime * directionSmoothSpeed);
+        currentAnimDirection.y = Mathf.Lerp(currentAnimDirection.y, input.move.y, Time.deltaTime * directionSmoothSpeed);
+        animator.SetFloat("Horizontal", currentAnimDirection.x);
+        animator.SetFloat("Vertical", currentAnimDirection.y);
+
         if (input.move.x != 0 && input.move.y != 0)
         {
             Vector3 moveDirection = new Vector3(input.move.x, 0, input.move.y).normalized;
@@ -145,9 +154,6 @@ public class PlayerMovement : MonoBehaviour
         {
             controller.Move(verticalMovement);
         }
-
-        animator.SetFloat("Horizontal", input.move.x);
-        animator.SetFloat("Vertical", input.move.y);
     }
 
     public void HandleJumpAndGravity()

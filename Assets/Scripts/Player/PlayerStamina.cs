@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using StarterAssets;
 
 public class PlayerStamina : MonoBehaviour
 {

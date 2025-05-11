@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.Audio;
-using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class SettingsManager : MonoBehaviour
 {
@@ -10,9 +10,14 @@ public class SettingsManager : MonoBehaviour
     private int musicVolume = 100;
     private int sfxVolume = 100;
 
+    [SerializeField] private GameObject settingsCanvas;
     [SerializeField] private TextMeshProUGUI screenModeText;
     [SerializeField] private TextMeshProUGUI graphicsQualityText;
+
+    [SerializeField] private Slider musicVolumeSlider;
     [SerializeField] private TextMeshProUGUI musicVolumeText;
+
+    [SerializeField] private Slider sfxVolumeSlider;
     [SerializeField] private TextMeshProUGUI sfxVolumeText;
     [SerializeField] private AudioMixer audioMixer;
 
@@ -21,6 +26,8 @@ public class SettingsManager : MonoBehaviour
         LoadSettings();
 
         UpdateSettingsUI();
+
+        settingsCanvas.SetActive(false);
     }
 
     private void UpdateSettingsUI()
@@ -98,11 +105,16 @@ public class SettingsManager : MonoBehaviour
         }
     }
 
-    public void SetMusicVolume(int volume)
+    public void HandleMusicSlider()
+    {
+        musicVolume = (int)musicVolumeSlider.value;
+        SetMusicVolume(musicVolume);
+    }
+
+    private void SetMusicVolume(int volume)
     {
         musicVolume = Mathf.Clamp(volume, 0, 100);
 
-        // Convertir el volumen de 0-100 a un valor logarítmico para el mezclador de audio
         float audioVolume = musicVolume > 0 ? Mathf.Log10(musicVolume / 100f) * 20 : -80f;
         audioMixer.SetFloat("Music", audioVolume);
 
@@ -111,17 +123,19 @@ public class SettingsManager : MonoBehaviour
 
     private void UpdateMusicVolumeText()
     {
-        if (musicVolumeText != null)
-        {
-            musicVolumeText.text = musicVolume.ToString();
-        }
+        musicVolumeText.text = musicVolume.ToString();
     }
 
-    public void SetSFXVolume(int volume)
+    public void HandleSFXSlider()
+    {
+        sfxVolume = (int)sfxVolumeSlider.value;
+        SetSFXVolume(sfxVolume);
+    }
+
+    private void SetSFXVolume(int volume)
     {
         sfxVolume = Mathf.Clamp(volume, 0, 100);
 
-        // Convertir el volumen de 0-100 a un valor logarítmico para el mezclador de audio
         float audioVolume = sfxVolume > 0 ? Mathf.Log10(sfxVolume / 100f) * 20 : -80f;
         audioMixer.SetFloat("SFX", audioVolume);
 
@@ -130,10 +144,7 @@ public class SettingsManager : MonoBehaviour
 
     private void UpdateSFXVolumeText()
     {
-        if (sfxVolumeText != null)
-        {
-            sfxVolumeText.text = sfxVolume.ToString();
-        }
+        sfxVolumeText.text = sfxVolume.ToString();
     }
 
     public void SaveSettings()
@@ -142,8 +153,6 @@ public class SettingsManager : MonoBehaviour
         PlayerPrefs.SetInt("GraphicsQuality", graphicsQuality);
         PlayerPrefs.SetInt("MusicVolume", musicVolume);
         PlayerPrefs.SetInt("SFXVolume", sfxVolume);
-        Debug.Log(musicVolume);
-        Debug.Log(sfxVolume);
         PlayerPrefs.Save();
     }
 
@@ -157,12 +166,13 @@ public class SettingsManager : MonoBehaviour
         SetScreenMode(screenMode);
         SetGraphicsQuality(graphicsQuality);
         SetMusicVolume(musicVolume);
+        musicVolumeSlider.value = musicVolume;
         SetSFXVolume(sfxVolume);
+        sfxVolumeSlider.value = sfxVolume;
     }
 
-    public void GoToMainMenu()
+    public void DisableSettingsCanvas()
     {
-        SaveSettings();
-        SceneManager.LoadScene("MainMenu");
+        settingsCanvas.SetActive(false);
     }
 }

@@ -42,19 +42,15 @@ public class PatrolState : EnemyBaseState
         Vector3 directionToPlayer = stateMachine.Player.position - stateMachine.transform.position;
         float distanceToPlayer = directionToPlayer.magnitude;
 
-        // Verificar si está dentro del radio
         if (distanceToPlayer <= stateMachine.DetectionRadius)
         {
-            // Verificar si está dentro del ángulo (cono de visión)
             float angle = Vector3.Angle(stateMachine.transform.forward, directionToPlayer);
             if (angle <= stateMachine.DetectionAngle / 2f)
             {
-                // Realizar raycast para verificar si hay obstáculos
                 if (Physics.Raycast(stateMachine.transform.position + Vector3.up, directionToPlayer.normalized, out RaycastHit hit, distanceToPlayer))
                 {
                     if (hit.transform == stateMachine.Player)
                     {
-                        // Detectó al jugador
                         stateMachine.DetectPlayer();
                     }
                 }

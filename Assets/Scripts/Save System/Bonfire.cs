@@ -2,96 +2,134 @@ using UnityEngine;
 
 public class Bonfire : MonoBehaviour
 {
+    [Header("Configuración")]
+    [SerializeField] private string bonfireID;
     [SerializeField] private GameObject particlesAndLight;
     [SerializeField] private GameObject interactionCanvas;
-    private bool lightUp = false;
+    [SerializeField] private Transform bonfireSpawnPoint;
+
+    [Header("Estado")]
+    [SerializeField] private bool isLit = false;
     private bool playerInRange = false;
 
     void Start()
     {
-        StarterAssetsInputs.OnInteractPerformed += LightUpBonfire;
-        particlesAndLight.SetActive(false);
+        StarterAssetsInputs.OnInteractPerformed += HandleInteraction;
+
+        CheckInitialState();
+    }
+
+    private void CheckInitialState()
+    {
+        if (BonfireManager.Instance != null && BonfireManager.Instance.IsBonfireLit(bonfireID))
+        {
+            isLit = true;
+            particlesAndLight.SetActive(true);
+        }
+        else
+        {
+            isLit = false;
+            particlesAndLight.SetActive(false);
+        }
+
         interactionCanvas.SetActive(false);
+    }
+
+    void OnEnable()
+    {
+        Invoke(nameof(CheckInitialState), 0.1f);
     }
 
     void OnDestroy()
     {
-        StarterAssetsInputs.OnInteractPerformed -= LightUpBonfire;
+        StarterAssetsInputs.OnInteractPerformed -= HandleInteraction;
     }
 
     void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player") && !lightUp)
+        if (other.CompareTag("Player"))
         {
             playerInRange = true;
-            interactionCanvas.SetActive(true);
+
+            if (!isLit)
+            {
+                interactionCanvas.SetActive(true);
+            }
+            else
+            {
+                // Si ya está encendida, mostrar UI para descansar
+            }
         }
     }
 
     void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Player") && !lightUp)
+        if (other.CompareTag("Player"))
         {
             playerInRange = false;
             interactionCanvas.SetActive(false);
         }
     }
 
-    private void LightUpBonfire()
+    private void HandleInteraction()
     {
-        if (!lightUp && playerInRange)
+        if (!playerInRange) return;
+
+        if (!isLit)
         {
-            particlesAndLight.SetActive(true);
-            interactionCanvas.SetActive(false);
-            lightUp = true;
-            SaveGameState();
-
-            // Registrar esta hoguera como punto de respawn
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.SetLastBonfirePosition(transform);
-            }
-        }
-    }
-
-    private void SaveGameState()
-    {
-        if (SaveSystem.Instance != null && GameManager.Instance != null)
-        {
-            // Obtener EnemyManager
-            EnemyManager enemyManager = FindObjectOfType<EnemyManager>();
-            if (enemyManager != null)
-            {
-                // Obtener el transform del jugador y su salud actual
-                GameObject player = GameObject.FindGameObjectWithTag("Player");
-                if (player != null)
-                {
-                    Transform playerTransform = player.transform;
-                    int playerHealth = 100;
-
-                    // Intentar obtener la salud actual si existe el componente
-                    if (player.TryGetComponent<PlayerHealth>(out var healthComponent))
-                    {
-                        playerHealth = healthComponent.GetCurrentHealth();
-                    }
-
-                    SaveSystem.Instance.SaveGame(
-                     enemyManager.GetDeadEnemyIDs(),
-                     enemyManager.GetEnemyDeathData(),
-                     playerTransform,
-                     playerHealth
-                 );
-                    Debug.Log("Estado del juego guardado en la hoguera.");
-                }
-            }
-            else
-            {
-                Debug.LogWarning("No se encontró EnemyManager para guardar estado de enemigos.");
-            }
+            LightUpBonfire();
         }
         else
         {
-            Debug.LogWarning("SaveSystem o GameManager no encontrados. No se puede guardar el juego.");
+            // Posible mecánica de descanso
+            // RestAtBonfire();
         }
+    }
+
+    private void LightUpBonfire()
+    {
+        if (isLit) return;
+
+        particlesAndLight.SetActive(true);
+        interactionCanvas.SetActive(false);
+        isLit = true;
+
+        if (BonfireManager.Instance != null)
+        {
+            BonfireManager.Instance.LightBonfire(bonfireID, bonfireSpawnPoint);
+        }
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.SetLastBonfirePosition(bonfireSpawnPoint);
+            GameManager.Instance.SetLastBonfireID(bonfireID);
+        }
+    }
+
+    private void RestAtBonfire()
+    {
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null && player.TryGetComponent<PlayerHealth>(out var healthComponent))
+        {
+            healthComponent.ResetHealth();
+        }
+
+        if (BonfireManager.Instance != null)
+        {
+            BonfireManager.Instance.LightBonfire(bonfireID, transform);
+        }
+    }
+
+    public void ForceLight()
+    {
+        if (isLit) return;
+
+        isLit = true;
+        particlesAndLight.SetActive(true);
+    }
+
+    public string GetBonfireID()
+    {
+        return bonfireID;
     }
 }

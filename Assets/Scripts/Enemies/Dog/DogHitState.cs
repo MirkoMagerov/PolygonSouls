@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class DogHitState : DogEnemyState
 {
-    private float hitStunDuration = 0.8f;
+    private float hitStunDuration = 1f;
     private float timer = 0f;
 
     public DogHitState(DogStateMachine stateMachine) : base(stateMachine) { }

@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -6,87 +7,151 @@ using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
-    public PlayerInput inputSystem;
-    public PlayerController playerController;
-    [SerializeField] private Transform lastBonfirePosition;
 
-    private EnemyManager enemyManager;
+    [Header("Referencias")]
+    [HideInInspector] public PlayerInput inputSystem;
+    [HideInInspector] public PlayerController playerController;
+    [SerializeField] private EnemyManager enemyManager;
 
-    void Awake()
+    [Header("Configuración")]
+    [SerializeField] private string mainMenuScene = "MainMenu";
+    [SerializeField] private string gameScene = "GameScene";
+    [SerializeField] private float respawnDelay = 4f;
+    [SerializeField] private float sceneTransitionDelay = 1f;
+    [SerializeField] private float fadeInDuration = 1.5f;
+    [SerializeField] private float fadeOutDuration = 1.5f;
+
+    [Header("Estado")]
+    private Transform lastBonfirePosition;
+    private string lastBonfireID;
+    private Transform initialSpawnPosition;
+    private bool isReloading = false;
+    private GameData cachedGameData = null;
+    public bool isNewGame = true;
+    public bool paused = false;
+
+    private GameObject player;
+
+    private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-            SceneManager.sceneLoaded += OnSceneLoaded;
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-
-        inputSystem = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerInput>();
-        playerController = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>();
+        InitializeSingleton();
     }
 
-    void Start()
-    {
-        LoadGameIfSaveExists();
-    }
-
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.F5))
-        {
-            SaveAndRestart();
-        }
-    }
-
-    void OnEnable()
+    private void OnEnable()
     {
         PlayerHealth.OnPlayerDied += HandlePlayerDeath;
+        SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
-    void OnDisable()
+    private void OnDisable()
     {
         PlayerHealth.OnPlayerDied -= HandlePlayerDeath;
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
-    private void HandlePlayerDeath()
+    private void Update()
     {
-        StartCoroutine(PlayerDeathCoroutine());
+        HandleDebugKeys();
+    }
+
+    private void InitializeSingleton()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        StartCoroutine(FindReferencesAfterSceneLoad());
+        if (scene.name == gameScene)
+        {
+            StartCoroutine(InitializeGameScene());
+        }
     }
 
-    private IEnumerator FindReferencesAfterSceneLoad()
+    private IEnumerator InitializeGameScene()
     {
-        yield return new WaitForSeconds(0.1f);
+        yield return new WaitForSeconds(sceneTransitionDelay);
 
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        FindGameReferences();
+
+        if (isNewGame)
+        {
+            SetupNewGame();
+        }
+        else if (cachedGameData != null)
+        {
+            ApplyGameData(cachedGameData);
+            cachedGameData = null;
+        }
+        else if (!isNewGame)
+        {
+            LoadGameIfSaveExists();
+        }
+
+        isReloading = false;
+    }
+
+    private void FindGameReferences()
+    {
+        initialSpawnPosition = GameObject.FindGameObjectWithTag("SpawnPos").transform;
+
+        player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
         {
             inputSystem = player.GetComponent<PlayerInput>();
             playerController = player.GetComponent<PlayerController>();
         }
 
-        LoadGameIfSaveExists();
+        if (enemyManager == null)
+        {
+            enemyManager = FindObjectOfType<EnemyManager>();
+        }
+    }
+
+    public void CreateNewGame()
+    {
+        ResetGameState();
+        isNewGame = true;
+
+        SaveSystem.Instance.DeleteSaveFile();
+        SaveSystem.Instance.CreateInitialSaveFile();
+
+        SceneManager.LoadScene(gameScene);
+    }
+
+    public void LoadExistingGame()
+    {
+        if (SaveSystem.Instance != null && SaveSystem.Instance.HasSaveFile())
+        {
+            isNewGame = false;
+            SceneManager.LoadScene(gameScene);
+        }
+        else
+        {
+            CreateNewGame();
+        }
+    }
+
+    public void ReturnToMainMenu()
+    {
+        SaveAndReturnToMainMenu();
     }
 
     public void DisableInputSystem()
     {
-        if (inputSystem != null)
-            inputSystem.DeactivateInput();
+        inputSystem.DeactivateInput();
     }
 
     public void EnableInputSystem()
     {
-        if (inputSystem != null)
-            inputSystem.ActivateInput();
+        inputSystem.ActivateInput();
     }
 
     public void SetLastBonfirePosition(Transform bonfireTransform)
@@ -94,78 +159,257 @@ public class GameManager : MonoBehaviour
         lastBonfirePosition = bonfireTransform;
     }
 
+    public void SetLastBonfireID(string bonfireID)
+    {
+        lastBonfireID = bonfireID;
+    }
+
     public void RegisterEnemyManager(EnemyManager manager)
     {
         enemyManager = manager;
-        LoadGameIfSaveExists();
+
+        if (cachedGameData != null)
+        {
+            StartCoroutine(DelayedApplyGameData(cachedGameData));
+        }
+    }
+
+    public void RestoreLastBonfireReference()
+    {
+        if (string.IsNullOrEmpty(lastBonfireID) || BonfireManager.Instance == null) return;
+
+        Transform bonfireTransform = BonfireManager.Instance.GetBonfireTransform(lastBonfireID);
+        if (bonfireTransform != null)
+        {
+            lastBonfirePosition = bonfireTransform;
+        }
+    }
+
+    public void SaveAndReturnToMainMenu()
+    {
+        SaveGame();
+        SceneManager.LoadScene(mainMenuScene);
+    }
+
+    private void ResetGameState()
+    {
+        cachedGameData = null;
+        lastBonfireID = null;
+        lastBonfirePosition = null;
+    }
+
+    private void HandleDebugKeys()
+    {
+        if (isReloading) return;
+
+        if (Input.GetKeyDown(KeyCode.F6))
+        {
+            ReturnToMainMenu();
+        }
+    }
+
+    private void HandlePlayerDeath()
+    {
+        StartCoroutine(PlayerDeathCoroutine());
+    }
+
+    private IEnumerator DelayedApplyGameData(GameData data)
+    {
+        yield return new WaitForSeconds(0.5f);
+        ApplyGameData(data);
     }
 
     private void LoadGameIfSaveExists()
     {
-        if (SaveSystem.Instance != null && SaveSystem.Instance.HasSaveFile() && enemyManager != null)
+        if (SaveSystem.Instance == null || !SaveSystem.Instance.HasSaveFile())
         {
-            GameData loadedData = SaveSystem.Instance.LoadGame();
+            isNewGame = true;
+            CreateNewGame();
+            return;
+        }
 
-            // Restaurar el estado de los enemigos
-            enemyManager.RestoreEnemyState(loadedData.deadEnemyIDs, loadedData.enemyDeathData);
+        GameData loadedData = SaveSystem.Instance.LoadGame();
 
-            // Si tenemos playerController y datos del jugador, restaurar su estado
-            if (playerController != null && loadedData.playerData != null && lastBonfirePosition == null)
+        if (enemyManager != null)
+        {
+            ApplyGameData(loadedData);
+        }
+        else
+        {
+            cachedGameData = loadedData;
+        }
+    }
+
+    private void SetupNewGame()
+    {
+        if (player == null || initialSpawnPosition == null) return;
+
+        TeleportPlayer(player, initialSpawnPosition.position, initialSpawnPosition.rotation);
+
+        if (player.TryGetComponent<PlayerHealth>(out var healthComponent))
+        {
+            healthComponent.ResetHealth();
+        }
+
+        enemyManager.ResetAllEnemies();
+    }
+
+    private void ApplyGameData(GameData data)
+    {
+        enemyManager.RestoreEnemyState(data.enemyDeathData);
+
+        if (player != null)
+        {
+            TeleportPlayer(player, data.playerData.position.ToVector3(), data.playerData.rotation.ToQuaternion());
+
+            if (playerController.TryGetComponent<PlayerHealth>(out var healthComponent))
             {
-                playerController.transform.SetPositionAndRotation(loadedData.playerData.position.ToVector3(), loadedData.playerData.rotation.ToQuaternion());
+                healthComponent.SetHealth(data.playerData.health);
+            }
+        }
 
-                // Restaurar salud si existe el componente
-                if (playerController.TryGetComponent<PlayerHealth>(out var healthComponent))
-                {
-                    healthComponent.SetHealth(loadedData.playerData.health);
-                }
+        if (!string.IsNullOrEmpty(data.lastActiveBonfireID))
+        {
+            lastBonfireID = data.lastActiveBonfireID;
+            StartCoroutine(LoadBonfireState(data));
+        }
+    }
+
+    private IEnumerator LoadBonfireState(GameData data)
+    {
+        yield return new WaitForSeconds(0.3f);
+
+        FindBonfireByID(data.lastActiveBonfireID);
+
+        if (data.litBonfireIDs != null && data.litBonfireIDs.Count > 0 && BonfireManager.Instance != null)
+        {
+            BonfireManager.Instance.InitializeLitBonfires(data.litBonfireIDs);
+
+            if (!string.IsNullOrEmpty(data.lastActiveBonfireID))
+            {
+                BonfireManager.Instance.SetLastActiveBonfireID(data.lastActiveBonfireID);
             }
 
-            Debug.Log($"Estado de juego cargado. Enemigos muertos: {loadedData.deadEnemyIDs.Count}");
+            BonfireManager.Instance.RecoverLitBonfires();
+
+            yield return new WaitForSeconds(0.2f);
+            RestoreLastBonfireReference();
+        }
+    }
+
+    private void FindBonfireByID(string bonfireID)
+    {
+        Bonfire[] bonfires = FindObjectsOfType<Bonfire>();
+        foreach (Bonfire bonfire in bonfires)
+        {
+            if (bonfire.GetBonfireID() == bonfireID)
+            {
+                lastBonfirePosition = bonfire.transform;
+                bonfire.ForceLight();
+                break;
+            }
         }
     }
 
     private IEnumerator PlayerDeathCoroutine()
     {
         DisableInputSystem();
+
+        playerController.playerDead = true;
         playerController.PlayDeathAnimation();
 
-        yield return new WaitForSeconds(3f);
+        yield return new WaitForSeconds(respawnDelay);
+
+        yield return new WaitForSeconds(fadeOutDuration);
+
+        if (lastBonfirePosition == null && !string.IsNullOrEmpty(lastBonfireID))
+        {
+            FindBonfireReference();
+        }
+
+        Vector3 respawnPosition;
+        Quaternion respawnRotation;
 
         if (lastBonfirePosition != null)
         {
-            playerController.gameObject.transform.SetPositionAndRotation(lastBonfirePosition.position, lastBonfirePosition.rotation);
+            lastBonfirePosition.GetPositionAndRotation(out respawnPosition, out respawnRotation);
         }
+        else
+        {
+            initialSpawnPosition.GetPositionAndRotation(out respawnPosition, out respawnRotation);
+        }
+
+        TeleportPlayer(player, respawnPosition, respawnRotation);
+        enemyManager.ResetAllEnemies();
+
+        playerController.playerDead = false;
+        playerController.CallRespawnTrigger();
         playerController.ResetHealth();
 
-        LoadGameIfSaveExists();
-
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(fadeInDuration);
         EnableInputSystem();
     }
 
-    // Método para testing
-    public void SaveAndRestart()
+    private void FindBonfireReference()
     {
-        if (enemyManager != null && SaveSystem.Instance != null)
+        if (BonfireManager.Instance != null)
         {
-            int playerHealth = 50;
-            if (playerController != null)
+            lastBonfirePosition = BonfireManager.Instance.GetBonfireTransform(lastBonfireID);
+            if (lastBonfirePosition != null)
             {
-                if (playerController.TryGetComponent<PlayerHealth>(out var healthComponent))
-                {
-                    playerHealth = healthComponent.GetCurrentHealth();
-                }
-
-                SaveSystem.Instance.SaveGame(
-                    enemyManager.GetDeadEnemyIDs(),
-                    enemyManager.GetEnemyDeathData(),
-                    playerController.transform,
-                    playerHealth
-                );
+                return;
             }
-
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
+
+        Bonfire[] bonfires = FindObjectsOfType<Bonfire>();
+        foreach (Bonfire bonfire in bonfires)
+        {
+            if (bonfire.GetBonfireID() == lastBonfireID)
+            {
+                lastBonfirePosition = bonfire.transform;
+                break;
+            }
+        }
+    }
+
+    private void TeleportPlayer(GameObject player, Vector3 position, Quaternion rotation)
+    {
+        CharacterController controller = player.GetComponent<CharacterController>();
+        bool controllerWasEnabled = false;
+
+        if (controller.enabled)
+        {
+            controllerWasEnabled = true;
+            controller.enabled = false;
+        }
+
+        player.transform.SetPositionAndRotation(position, rotation);
+
+        if (controllerWasEnabled)
+        {
+            controller.enabled = true;
+        }
+    }
+
+    private void SaveGame()
+    {
+        if (enemyManager == null || SaveSystem.Instance == null || playerController == null) return;
+
+        List<string> deadEnemyIDs = enemyManager.GetDeadEnemyIDs();
+        List<EnemyDeathData> deathData = enemyManager.GetEnemyDeathData();
+
+        int playerHealth = 100;
+        if (playerController.TryGetComponent<PlayerHealth>(out var healthComponent))
+        {
+            playerHealth = healthComponent.GetCurrentHealth();
+        }
+
+        SaveSystem.Instance.SaveGameWithBonfire(
+            deadEnemyIDs,
+            deathData,
+            playerController.transform,
+            playerHealth,
+            lastBonfireID
+        );
     }
 }

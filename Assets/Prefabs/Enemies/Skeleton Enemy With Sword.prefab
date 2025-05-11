@@ -542,7 +542,7 @@ RectTransform:
   m_Father: {fileID: 8082265191421687426}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -1421,7 +1421,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3599526397574585349}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
   m_LocalPosition: {x: 0, y: 0, z: 30.22}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1517,7 +1517,6 @@ MonoBehaviour:
   patrolPoints:
   - {fileID: 0}
   - {fileID: 0}
-  - {fileID: 0}
   detectionRadius: 15
   detectionAngle: 145
   closeAttackRange: 2.8
@@ -1542,6 +1541,8 @@ MonoBehaviour:
   healthBarCanvas: {fileID: 557726338628243127}
   healthBar: {fileID: 5283800921061007808}
   damageBar: {fileID: 4105276178948690530}
+  enemyStateMachine: {fileID: 7067676764454903997}
+  maxHealth: 100
 --- !u!114 &5300985743132556277
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1877,7 +1878,7 @@ RectTransform:
   m_Father: {fileID: 345826984883651126}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}

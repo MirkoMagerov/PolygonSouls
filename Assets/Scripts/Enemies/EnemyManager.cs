@@ -4,18 +4,75 @@ using UnityEngine;
 
 public class EnemyManager : MonoBehaviour
 {
+    [SerializeField] private List<IEnemyStateMachine> allEnemies = new();
+    private Dictionary<string, IEnemyStateMachine> enemyMap = new();
     private List<EnemySpawner> enemySpawners = new();
+    private List<EnemyDeathData> pendingDeathData = new();
+    private bool isInitialized = false;
+    private bool isRestoringState = false;
 
     private void Awake()
     {
-        enemySpawners.AddRange(FindObjectsOfType<EnemySpawner>());
-
-        if (GameManager.Instance != null) GameManager.Instance.RegisterEnemyManager(this);
+        StartCoroutine(InitializeWithDelay());
     }
 
-    public void RespawnAllEnemies()
+    void Start()
     {
-        foreach (EnemySpawner spawner in enemySpawners) { spawner.RespawnEnemy(); }
+        StartCoroutine(EnsureRegistration());
+    }
+
+    private IEnumerator EnsureRegistration()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.RegisterEnemyManager(this);
+            yield break;
+        }
+        yield return new WaitForSeconds(0.2f);
+        // int attempts = 0;
+        // while (attempts < 5)
+        // {
+        //     if (GameManager.Instance != null)
+        //     {
+        //         GameManager.Instance.RegisterEnemyManager(this);
+        //         yield break;
+        //     }
+        //     attempts++;
+        //     yield return new WaitForSeconds(0.2f);
+        // }
+    }
+
+    private IEnumerator InitializeWithDelay()
+    {
+        yield return new WaitForEndOfFrame();
+
+        RefreshEnemySpawners();
+
+        if (pendingDeathData.Count > 0)
+        {
+            isRestoringState = true;
+            ApplyDeathData(pendingDeathData);
+            pendingDeathData.Clear();
+            isRestoringState = false;
+        }
+
+        isInitialized = true;
+    }
+
+    private void RefreshEnemySpawners()
+    {
+        enemySpawners.Clear();
+        var foundSpawners = FindObjectsOfType<EnemySpawner>();
+        enemySpawners.AddRange(foundSpawners);
+
+        if (foundSpawners.Length > 0)
+        {
+            List<string> allIDs = new();
+            foreach (var spawner in foundSpawners)
+            {
+                allIDs.Add(spawner.GetEnemyID());
+            }
+        }
     }
 
     public List<string> GetDeadEnemyIDs()
@@ -49,39 +106,89 @@ public class EnemyManager : MonoBehaviour
         return deathDataList;
     }
 
-    public void RestoreEnemyState(List<string> deadEnemyIDs, List<EnemyDeathData> deathDataList)
+    public void ResetAllEnemies()
     {
-        Debug.Log($"Restoring enemy state, dead enemies: {deadEnemyIDs?.Count ?? 0}, death data: {deathDataList?.Count ?? 0}");
+        RefreshEnemySpawners();
 
         foreach (EnemySpawner spawner in enemySpawners)
         {
             spawner.RespawnEnemy();
         }
 
-        if (deathDataList != null && deathDataList.Count > 0)
-        {
-            foreach (EnemyDeathData deathData in deathDataList)
-            {
-                Debug.Log($"Processing death data for enemy ID: {deathData.enemyID}");
-                EnemySpawner spawner = enemySpawners.Find(s => s.GetEnemyID() == deathData.enemyID);
+        pendingDeathData.Clear();
+    }
 
-                if (spawner != null)
-                {
-                    Debug.Log($"Found spawner for enemy ID: {deathData.enemyID}, applying death state");
-                    spawner.ForceKillWithPositionAndRotation(
-                        deathData.deathPosition.ToVector3(),
-                        deathData.deathRotation.ToQuaternion()
-                    );
-                }
-                else
-                {
-                    Debug.LogWarning($"No spawner found for enemy ID: {deathData.enemyID}");
-                }
+    public void RestoreEnemyState(List<EnemyDeathData> deathDataList)
+    {
+        if (GameManager.Instance.isNewGame)
+        {
+            ResetAllEnemies();
+            return;
+        }
+
+        if (!isInitialized && deathDataList != null && deathDataList.Count > 0)
+        {
+            pendingDeathData.Clear();
+            pendingDeathData.AddRange(deathDataList);
+            return;
+        }
+
+        if (enemySpawners.Count == 0)
+        {
+            RefreshEnemySpawners();
+        }
+
+        if (!isRestoringState)
+        {
+            foreach (EnemySpawner spawner in enemySpawners)
+            {
+                spawner.RespawnEnemy();
             }
         }
-        else
+
+        if (deathDataList != null && deathDataList.Count > 0)
         {
-            Debug.Log("No death data available to restore");
+            isRestoringState = true;
+            ApplyDeathData(deathDataList);
+            isRestoringState = false;
         }
+    }
+
+    private void ApplyDeathData(List<EnemyDeathData> deathDataList)
+    {
+        if (deathDataList == null || deathDataList.Count == 0)
+        {
+            return;
+        }
+
+        RefreshEnemySpawners();
+
+        Dictionary<string, EnemySpawner> spawnerLookup = new();
+        foreach (EnemySpawner spawner in enemySpawners)
+        {
+            string id = spawner.GetEnemyID();
+            if (!spawnerLookup.ContainsKey(id))
+            {
+                spawnerLookup.Add(id, spawner);
+            }
+        }
+
+        foreach (EnemyDeathData deathData in deathDataList)
+        {
+            if (spawnerLookup.TryGetValue(deathData.enemyID, out EnemySpawner spawner))
+            {
+                StartCoroutine(DelayedForceKill(
+                        spawner,
+                        deathData.deathPosition.ToVector3(),
+                        deathData.deathRotation.ToQuaternion()
+                    ));
+            }
+        }
+    }
+
+    private IEnumerator DelayedForceKill(EnemySpawner spawner, Vector3 position, Quaternion rotation)
+    {
+        yield return new WaitForSeconds(0.2f);
+        spawner.ForceKillWithPositionAndRotation(position, rotation);
     }
 }

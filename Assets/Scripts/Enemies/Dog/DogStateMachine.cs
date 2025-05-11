@@ -1,7 +1,8 @@
+using System;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class DogStateMachine : MonoBehaviour
+public class DogStateMachine : MonoBehaviour, IEnemyStateMachine, IPatrolPointUser, IEnemyDeathNotifier
 {
     // Referencias
     public NavMeshAgent Agent { get; private set; }
@@ -17,6 +18,8 @@ public class DogStateMachine : MonoBehaviour
     public float DetectionRadius = 10.0f;
     public float DetectionAngle = 120.0f;
 
+    public int AttackDamage = 10;
+
     // Estados
     private DogEnemyState currentState;
     private DogPatrolState patrolState;
@@ -26,10 +29,9 @@ public class DogStateMachine : MonoBehaviour
     private DogClawAttackState clawAttackState;
     private DogHitState hitState;
     private DogDeathState deathState;
+    private DogAttackManager attackManager;
 
-    // Componentes de ataque
-    public int AttackDamage = 20;
-    public LayerMask PlayerLayer;
+    public event Action OnDeath;
 
     private void Awake()
     {
@@ -44,41 +46,40 @@ public class DogStateMachine : MonoBehaviour
         clawAttackState = new DogClawAttackState(this);
         hitState = new DogHitState(this);
         deathState = new DogDeathState(this);
+        attackManager = GetComponent<DogAttackManager>();
     }
 
     private void Start()
     {
-        // Buscar al jugador
         Player = GameObject.FindGameObjectWithTag("Player").transform;
 
-        // Iniciar en estado de patrulla
         ChangeState(patrolState);
     }
 
     private void Update()
     {
-        if (currentState != null)
-        {
-            currentState.UpdateState();
-        }
+        currentState?.UpdateState();
+    }
+
+    public void SetPatrolPoints(Transform[] points)
+    {
+        PatrolPoints = points;
     }
 
     public void ChangeState(DogEnemyState newState)
     {
-        if (currentState != null)
-        {
-            currentState.ExitState();
-        }
+        currentState?.ExitState();
 
         currentState = newState;
 
-        if (currentState != null)
+        currentState?.EnterState();
+
+        if (!(currentState is DogBiteAttackState || currentState is DogClawAttackState))
         {
-            currentState.EnterState();
+            if (attackManager != null) attackManager.InterruptAttack();
         }
     }
 
-    // Métodos de transición
     public void DetectPlayer()
     {
         ChangeState(chaseState);
@@ -101,7 +102,6 @@ public class DogStateMachine : MonoBehaviour
 
     public void FinishAttack()
     {
-        // En lugar de volver directamente a Chase, usar circling a veces (comportamiento DS3)
         TransitionToCirclingState();
     }
 
@@ -117,7 +117,6 @@ public class DogStateMachine : MonoBehaviour
 
     public void FinishHit()
     {
-        // Después de recibir un golpe, perseguir agresivamente
         if (Player != null)
         {
             ChangeState(chaseState);
@@ -128,50 +127,37 @@ public class DogStateMachine : MonoBehaviour
         }
     }
 
-    public void Die()
-    {
-        ChangeState(deathState);
-
-        // Desactivar componentes después de un tiempo
-        Invoke("DisableEnemy", 5.0f);
-    }
-
-    private void DisableEnemy()
-    {
-        Agent.enabled = false;
-        enabled = false;
-    }
-
     public void NotifyDeath()
     {
-        // Evento de muerte que puede ser usado por otros sistemas
+        OnDeath?.Invoke();
+        if (attackManager != null) attackManager.InterruptAttack();
+        ChangeState(deathState);
     }
 
     public void DealDamage()
     {
-        if (Player == null) return;
-
-        // Calcular daño basado en distancia y ángulo
-        Vector3 directionToPlayer = Player.position - transform.position;
-        float distanceToPlayer = directionToPlayer.magnitude;
-
-        if (distanceToPlayer <= AttackRange * 1.2f)
+        if (Player.TryGetComponent<PlayerHealth>(out var playerHealth))
         {
-            // Comprobar si estamos mirando hacia el jugador
-            float angleToPlayer = Vector3.Angle(transform.forward, directionToPlayer.normalized);
+            playerHealth.TakeDamage(AttackDamage);
 
-            if (angleToPlayer <= 45f)
+            TryGetComponent<AudioSource>(out var audioSource);
+            if (audioSource != null)
             {
-                // Enviar mensaje de daño al jugador
-                Player.GetComponent<PlayerHealth>()?.TakeDamage(AttackDamage);
-
-                // Efecto de sonido de mordisco/zarpazo
-                TryGetComponent<AudioSource>(out var audioSource);
-                if (audioSource != null)
-                {
-                    audioSource.Play();
-                }
+                audioSource.Play();
             }
         }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, DetectionRadius);
+
+        Gizmos.color = Color.red;
+        Vector3 rightEdge = Quaternion.Euler(0, DetectionAngle / 2f, 0) * transform.forward;
+        Vector3 leftEdge = Quaternion.Euler(0, -DetectionAngle / 2f, 0) * transform.forward;
+        Gizmos.DrawRay(transform.position, rightEdge * DetectionRadius);
+        Gizmos.DrawRay(transform.position, leftEdge * DetectionRadius);
+        Gizmos.DrawRay(transform.position, transform.forward * DetectionRadius);
     }
 }

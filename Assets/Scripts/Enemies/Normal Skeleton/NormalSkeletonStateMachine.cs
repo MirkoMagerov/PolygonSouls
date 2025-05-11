@@ -16,9 +16,8 @@ public abstract class EnemyBaseState
     public abstract void ExitState();
 }
 
-public class NormalSkeletonStateMachine : MonoBehaviour, IEnemyDeathNotifier, IPatrolPointUser
+public class NormalSkeletonStateMachine : MonoBehaviour, IEnemyStateMachine, IPatrolPointUser, IEnemyDeathNotifier
 {
-    public event Action OnDeath;
     private NavMeshAgent agent;
     private Animator animator;
     private Transform player;
@@ -45,6 +44,7 @@ public class NormalSkeletonStateMachine : MonoBehaviour, IEnemyDeathNotifier, IP
     public AttackState AttackState { get; private set; }
     public ChargeAttackState ChargeAttackState { get; private set; }
     public HitState HitState { get; private set; }
+    public DeathState DeathState { get; private set; }
 
     public event Action OnPlayerDetected;
     public event Action OnPlayerLost;
@@ -53,6 +53,7 @@ public class NormalSkeletonStateMachine : MonoBehaviour, IEnemyDeathNotifier, IP
     public event Action OnAttackFinished;
     public event Action OnHit;
     public event Action OnHitFinished;
+    public event Action OnDeath;
 
     // Getters para componentes y parámetros
     public NavMeshAgent Agent => agent;
@@ -78,6 +79,7 @@ public class NormalSkeletonStateMachine : MonoBehaviour, IEnemyDeathNotifier, IP
         AttackState = new AttackState(this);
         ChargeAttackState = new ChargeAttackState(this);
         HitState = new HitState(this);
+        DeathState = new DeathState(this);
     }
 
     private void Start()
@@ -123,10 +125,15 @@ public class NormalSkeletonStateMachine : MonoBehaviour, IEnemyDeathNotifier, IP
     public void FinishAttack() => OnAttackFinished?.Invoke();
     public void TakeHit() => OnHit?.Invoke();
     public void FinishHit() => OnHitFinished?.Invoke();
-    public void NotifyDeath() => OnDeath?.Invoke();
-
     public bool GetAttackWindow() { return attackWindow; }
     public bool GetHitRegisteredThisAttack() { return hitRegisteredThisAttack; }
+
+    public void NotifyDeath()
+    {
+        OnDeath?.Invoke();
+        SetAttackWindowActive(0);
+        ChangeState(DeathState);
+    }
 
     public void SetAttackWindowActive(int isActive)
     {

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
@@ -8,6 +9,7 @@ public class PlayerController : MonoBehaviour
     private PlayerCamera cameraControl;
     private PlayerDodge dodge;
     private PlayerHealth health;
+    public bool playerDead = false;
 
     private void Awake()
     {
@@ -25,6 +27,8 @@ public class PlayerController : MonoBehaviour
         anim.SetLayerWeight(0, 0f);
         anim.SetLayerWeight(1, 1f);
         input.OnDodgePerformed += HandleDodge;
+        GameManager.Instance.inputSystem = GetComponent<PlayerInput>();
+        GameManager.Instance.playerController = this;
     }
 
     void OnDestroy()
@@ -34,9 +38,12 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        movement.GroundedCheck();
-        movement.HandleJumpAndGravity();
-        movement.HandleMovement();
+        if (!playerDead)
+        {
+            movement.GroundedCheck();
+            movement.HandleJumpAndGravity();
+            movement.HandleMovement();
+        }
     }
 
     private void HandleDodge()
@@ -63,6 +70,11 @@ public class PlayerController : MonoBehaviour
         anim.SetTrigger("Dead");
     }
 
+    public void CallRespawnTrigger()
+    {
+        anim.SetTrigger("Respawn");
+    }
+
     public void ResetHealth()
     {
         health.ResetHealth();
@@ -70,6 +82,9 @@ public class PlayerController : MonoBehaviour
 
     private void LateUpdate()
     {
-        cameraControl.UpdateCamera();
+        if (!GameManager.Instance.paused)
+        {
+            cameraControl.UpdateCamera();
+        }
     }
 }

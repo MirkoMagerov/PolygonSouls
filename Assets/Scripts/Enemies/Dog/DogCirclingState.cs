@@ -13,7 +13,6 @@ public class DogCirclingState : DogEnemyState
     private float maxCircleTimeBeforeAttack = 1.5f;
     private float targetCircleTime;
 
-    // Dirección de circling se establece al entrar al estado y se mantiene constante
     private bool directionEstablished = false;
 
     public DogCirclingState(DogStateMachine stateMachine) : base(stateMachine)
@@ -23,7 +22,6 @@ public class DogCirclingState : DogEnemyState
 
     private void ResetCirclingBehavior()
     {
-        // La dirección solo se establece al entrar al estado
         if (!directionEstablished)
         {
             clockwise = Random.value > 0.5f;
@@ -40,10 +38,8 @@ public class DogCirclingState : DogEnemyState
         stateMachine.Agent.speed = stateMachine.ChaseSpeed * 0.8f;
         stateMachine.Animator.SetBool("IsRunning", true);
 
-        // Desactivar NavMeshAgent para control directo del movimiento
         stateMachine.Agent.isStopped = true;
 
-        // Resetear la bandera de dirección establecida al entrar al estado
         directionEstablished = false;
         ResetCirclingBehavior();
     }
@@ -73,7 +69,7 @@ public class DogCirclingState : DogEnemyState
         {
             // Demasiado cerca - retrocede ligeramente antes de atacar
             Vector3 backwardDirection = -dirToPlayer.normalized;
-            stateMachine.transform.position += backwardDirection * Time.deltaTime * stateMachine.ChaseSpeed * 0.5f;
+            stateMachine.transform.position += 0.5f * stateMachine.ChaseSpeed * Time.deltaTime * backwardDirection;
         }
 
         // Actualizar posición de circling
@@ -93,7 +89,7 @@ public class DogCirclingState : DogEnemyState
 
         // Mover hacia la posición calculada
         Vector3 moveDirection = (targetPosition - stateMachine.transform.position).normalized;
-        stateMachine.transform.position += moveDirection * Time.deltaTime * circlingSpeed;
+        stateMachine.transform.position += circlingSpeed * Time.deltaTime * moveDirection;
 
         // Mantener mirada fija en el jugador - característica clave de los perros DS3
         Vector3 lookDirection = stateMachine.Player.position - stateMachine.transform.position;
@@ -123,15 +119,11 @@ public class DogCirclingState : DogEnemyState
                 return;
             }
         }
-
-        // Eliminar el cambio aleatorio de dirección durante el circling
-        // Ya no tenemos: if (Random.value < 0.01f) { clockwise = !clockwise; }
     }
 
     public override void ExitState()
     {
         stateMachine.Agent.isStopped = false;
-        // Resetear la bandera para que la próxima vez elija una nueva dirección
         directionEstablished = false;
     }
 }

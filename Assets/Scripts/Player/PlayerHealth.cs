@@ -10,6 +10,7 @@ public class PlayerHealth : MonoBehaviour
 
     [SerializeField] private int potionHealAmount = 20;
     [SerializeField] private int initialPotions = 5;
+    [SerializeField] private int minPotions = 5;
     [SerializeField] private int currentPotionLevel = 0;
     [SerializeField] private int maxHealth = 100;
     [SerializeField] private float healingParticlesDuration = 1.65f;
@@ -31,6 +32,10 @@ public class PlayerHealth : MonoBehaviour
         dodge = GetComponent<PlayerDodge>();
         equipmentReference = GetComponent<PlayerEquipmentReference>();
         animator = GetComponent<Animator>();
+    }
+
+    void OnEnable()
+    {
         input = GetComponent<StarterAssetsInputs>();
         input.OnHealPerformed += StartHealing;
         currentHealth = maxHealth;
@@ -44,11 +49,26 @@ public class PlayerHealth : MonoBehaviour
         input.OnHealPerformed -= StartHealing;
     }
 
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.X))
+        {
+            TakeDamage(150);
+        }
+    }
+
     public void TakeDamage(int damage)
     {
-        if (!dodge.IsInvincible())
+        if (!dodge.IsInvincible() && currentHealth > 0)
         {
             OnPlayerDamaged?.Invoke(damage);
+
+            currentHealth = Mathf.Max(currentHealth - damage, 0);
+            if (currentHealth <= 0)
+            {
+                Die();
+                return;
+            }
 
             if (isHealing)
             {
@@ -57,12 +77,6 @@ public class PlayerHealth : MonoBehaviour
             else
             {
                 animator.SetTrigger("Hit");
-            }
-
-            currentHealth = Mathf.Max(currentHealth - damage, 0);
-            if (currentHealth <= 0)
-            {
-                Die();
             }
         }
     }
@@ -138,14 +152,16 @@ public class PlayerHealth : MonoBehaviour
     public void ResetHealth()
     {
         currentHealth = maxHealth;
+        OnPlayerHealed?.Invoke(currentHealth);
+        UpdateUI();
     }
 
     public void Die()
     {
+        potionQuantity = minPotions;
         OnPlayerDied?.Invoke();
     }
 
-    // Used in animator event
     private void CompleteHealingAnimation()
     {
         isHealing = false;

@@ -18,13 +18,10 @@ public class ChaseState : EnemyBaseState
     {
         if (stateMachine.Player == null) return;
 
-        // Actualizar destino para seguir al jugador
         stateMachine.Agent.SetDestination(stateMachine.Player.position);
 
-        // Calcular distancia al jugador
         float distanceToPlayer = Vector3.Distance(stateMachine.transform.position, stateMachine.Player.position);
 
-        // Verificar ataques basados en distancia y cooldowns
         if (distanceToPlayer <= stateMachine.ChargeAttackRange && distanceToPlayer > stateMachine.CloseAttackRange &&
             Time.time > lastChargeTime)
         {
@@ -40,6 +37,6 @@ public class ChaseState : EnemyBaseState
 
     public override void ExitState()
     {
-        // Nada específico al salir de persecución
+
     }
 }

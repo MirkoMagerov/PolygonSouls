@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using UnityEngine.AI;
 
 public interface IEnemyDeathNotifier
 {
@@ -16,22 +15,25 @@ public class EnemySpawner : MonoBehaviour
 {
     [SerializeField] private GameObject enemyPrefab;
     [SerializeField] private Transform[] patrolPoints;
-    private GameObject spawnedEnemy;
+    [SerializeField] private GameObject spawnedEnemy;
     private Vector3 deathPosition;
     private Quaternion deathRotation;
     private string enemyID;
     private bool enemyIsDead = false;
+    private bool isBeingDestroyed = false;
 
-    void Awake()
+    private void OnDestroy()
+    {
+        isBeingDestroyed = true;
+        CleanupEnemy();
+    }
+
+    private void Start()
     {
         if (string.IsNullOrEmpty(enemyID))
         {
             GenerateUniqueID();
         }
-    }
-
-    private void Start()
-    {
         SpawnEnemy();
     }
 
@@ -42,20 +44,17 @@ public class EnemySpawner : MonoBehaviour
     {
         string posStr = $"{transform.position.x:F1}_{transform.position.y:F1}_{transform.position.z:F1}";
         enemyID = $"Enemy-{gameObject.name}-{posStr}";
-        Debug.Log($"Generated ID: {enemyID}");
     }
 
     public void SpawnEnemy()
     {
+        if (isBeingDestroyed)
+        {
+            return;
+        }
+
         if (!enemyIsDead)
         {
-            if (enemyIsDead)
-            {
-                Debug.Log($"Not spawning enemy with ID {enemyID} because it's marked as dead");
-                return;
-            }
-
-            Debug.Log($"Spawning enemy with ID: {enemyID}");
             spawnedEnemy = Instantiate(enemyPrefab, transform.position, transform.rotation);
 
             if (!spawnedEnemy.TryGetComponent<EnemyIdentifier>(out var identifier))
@@ -75,25 +74,30 @@ public class EnemySpawner : MonoBehaviour
 
     private void ConfigureEnemyData(GameObject enemy)
     {
+        if (enemy == null) return;
+
         IPatrolPointUser patrolUser = enemy.GetComponent<IPatrolPointUser>();
-        if (patrolPoints.Length > 0)
+        if (patrolUser != null && patrolPoints != null && patrolPoints.Length > 0)
         {
             patrolUser.SetPatrolPoints(patrolPoints);
         }
     }
 
+    private void CleanupEnemy()
+    {
+        if (spawnedEnemy.TryGetComponent<IEnemyDeathNotifier>(out var deathNotifier))
+        {
+            deathNotifier.OnDeath -= HandleEnemyDeath;
+        }
+        Destroy(spawnedEnemy);
+        spawnedEnemy = null;
+    }
+
     public void RespawnEnemy()
     {
-        if (spawnedEnemy != null)
-        {
-            if (spawnedEnemy.TryGetComponent<IEnemyDeathNotifier>(out var deathNotifier))
-            {
-                deathNotifier.OnDeath -= HandleEnemyDeath;
-            }
+        if (isBeingDestroyed) return;
 
-            Destroy(spawnedEnemy);
-            spawnedEnemy = null;
-        }
+        CleanupEnemy();
 
         enemyIsDead = false;
         SpawnEnemy();
@@ -101,30 +105,31 @@ public class EnemySpawner : MonoBehaviour
 
     private void HandleEnemyDeath()
     {
+        if (isBeingDestroyed) return;
+
         if (spawnedEnemy != null)
         {
             deathPosition = spawnedEnemy.transform.position;
             deathRotation = spawnedEnemy.transform.rotation;
-        }
 
-        enemyIsDead = true;
-
-        if (spawnedEnemy != null)
-        {
             if (spawnedEnemy.TryGetComponent<IEnemyDeathNotifier>(out var deathNotifier))
             {
                 deathNotifier.OnDeath -= HandleEnemyDeath;
             }
         }
 
-        spawnedEnemy = null;
+        enemyIsDead = true;
     }
 
     public void ForceKillWithPositionAndRotation(Vector3 position, Quaternion rotation)
     {
+        if (isBeingDestroyed) return;
+        CleanupEnemy();
+
         if (spawnedEnemy != null)
         {
             Destroy(spawnedEnemy);
+            spawnedEnemy = null;
         }
 
         enemyIsDead = true;
@@ -141,36 +146,28 @@ public class EnemySpawner : MonoBehaviour
             identifier.SetID(enemyID);
         }
 
-        EnableDeathVisuals(spawnedEnemy);
-        DisableEnemyComponents(spawnedEnemy);
-
         deathPosition = position;
         deathRotation = rotation;
 
-        Debug.Log($"Enemy {enemyID} respawned as dead at position {position}");
+        DisableEnemyComponents(spawnedEnemy);
     }
 
     private void DisableEnemyComponents(GameObject enemy)
     {
-        enemy.TryGetComponent<CharacterController>(out var characterController);
-        characterController.enabled = false;
+        if (enemy == null) return;
 
-        enemy.TryGetComponent<NavMeshAgent>(out var navMeshAgent);
-        navMeshAgent.enabled = false;
+        if (enemy.TryGetComponent<EnemyHealth>(out var enemyHealth))
+        {
+            enemyHealth.InstaKill();
+        }
 
         MonoBehaviour[] scripts = enemy.GetComponents<MonoBehaviour>();
         foreach (var script in scripts)
         {
-            script.enabled = false;
-        }
-    }
-
-    private void EnableDeathVisuals(GameObject enemy)
-    {
-        if (enemy.TryGetComponent<Animator>(out var animator))
-        {
-            animator.enabled = true;
-            animator.Play("Death");
+            if (script != null)
+            {
+                script.enabled = false;
+            }
         }
     }
 

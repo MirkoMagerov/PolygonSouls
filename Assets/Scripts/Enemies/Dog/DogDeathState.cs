@@ -7,14 +7,14 @@ public class DogDeathState : DogEnemyState
     public override void EnterState()
     {
         stateMachine.Agent.isStopped = true;
-        stateMachine.Animator.SetTrigger("Death");
+        stateMachine.Agent.enabled = false;
+        stateMachine.Animator.SetTrigger("Dead");
 
         Collider[] colliders = stateMachine.GetComponents<Collider>();
         foreach (Collider collider in colliders)
         {
             collider.enabled = false;
         }
-        stateMachine.NotifyDeath();
     }
 
     public override void UpdateState()

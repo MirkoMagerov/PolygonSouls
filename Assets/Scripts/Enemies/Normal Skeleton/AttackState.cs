@@ -34,6 +34,6 @@ public class AttackState : EnemyBaseState
 
     public override void ExitState()
     {
-        // Nada específico al salir del ataque
+
     }
 }

@@ -7,6 +7,8 @@ public class GameData
     public List<string> deadEnemyIDs = new List<string>();
     public List<EnemyDeathData> enemyDeathData = new List<EnemyDeathData>();
     public PlayerData playerData;
+    public string lastActiveBonfireID;
+    public List<string> litBonfireIDs = new();
 }
 
 [System.Serializable]
@@ -15,6 +17,13 @@ public class PlayerData
     public SerializationHelper.SerializableVector3 position;
     public SerializationHelper.SerializableQuaternion rotation;
     public int health;
+
+    public PlayerData()
+    {
+        position = new SerializationHelper.SerializableVector3(Vector3.zero);
+        rotation = new SerializationHelper.SerializableQuaternion(Quaternion.identity);
+        health = 100;
+    }
 
     public PlayerData(Transform transform, int currentHealth)
     {
